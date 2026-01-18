@@ -51,12 +51,28 @@ export default function TradeDetailsPage() {
                         setAfterImageUrl(t.afterImageUrl || "")
 
                         // Initialize Edit Form
+                        // Initialize Edit Form
                         setEditPlan({
+                            instrument: t.instrument,
+                            direction: t.direction,
+                            date: t.date,
+                            strategy: t.strategy,
+                            tradeType: t.tradeType,
+                            marketCondition: t.marketCondition,
                             plannedEntry: t.plannedEntry,
                             plannedSL: t.plannedSL,
                             plannedTP: t.plannedTP,
                             riskAmount: t.riskAmount,
-                            notes: t.notes
+                            positionSize: t.positionSize,
+                            entryReason: t.entryReason,
+                            preTradeEmotion: t.preTradeEmotion,
+                            notes: t.notes,
+                            beforeImageUrl: t.beforeImageUrl,
+                            // Strategy specifics
+                            zoneType: t.zoneType,
+                            confirmation: t.confirmation,
+                            pdArray: t.pdArray,
+                            liquidityTarget: t.liquidityTarget
                         })
                     }
                 })
@@ -196,7 +212,37 @@ export default function TradeDetailsPage() {
                                 </>
                             ) : (
                                 <div className="space-y-6 animate-in fade-in">
-                                    <div className="grid grid-cols-2 gap-4">
+
+                                    {/* --- Section 1: Core Info --- */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-xs text-slate-500 uppercase">Instrument & Direction</label>
+                                            <div className="flex gap-2">
+                                                <Input
+                                                    value={editPlan.instrument || ""}
+                                                    onChange={e => setEditPlan({ ...editPlan, instrument: e.target.value })}
+                                                    className="bg-slate-950 block"
+                                                    placeholder="e.g. EURUSD"
+                                                />
+                                                <Select value={editPlan.direction} onChange={(e) => setEditPlan({ ...editPlan, direction: e.target.value as any })} className="w-[100px] bg-slate-950">
+                                                    <option value="Long">Long</option>
+                                                    <option value="Short">Short</option>
+                                                </Select>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs text-slate-500 uppercase">Date (Planned)</label>
+                                            <input
+                                                type="datetime-local"
+                                                value={editPlan.date ? new Date(editPlan.date).toISOString().slice(0, 16) : ""}
+                                                onChange={(e) => setEditPlan({ ...editPlan, date: new Date(e.target.value).getTime() })}
+                                                className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* --- Section 2: Numbers --- */}
+                                    <div className="grid grid-cols-2 gap-4 border-t border-slate-800/50 pt-4">
                                         <div className="space-y-2">
                                             <label className="text-xs text-slate-500 uppercase">Entry</label>
                                             <Input
@@ -234,6 +280,37 @@ export default function TradeDetailsPage() {
                                             />
                                         </div>
                                     </div>
+
+                                    {/* --- Section 3: Context --- */}
+                                    <div className="grid grid-cols-2 gap-4 border-t border-slate-800/50 pt-4">
+                                        <div className="space-y-2">
+                                            <label className="text-xs text-slate-500 uppercase">Strategy</label>
+                                            <Select value={editPlan.strategy} onChange={(e) => setEditPlan({ ...editPlan, strategy: e.target.value as any })} className="bg-slate-950">
+                                                <option value="SupplyDemand">Supply & Demand</option>
+                                                <option value="ICT">ICT</option>
+                                                <option value="Other">Other</option>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs text-slate-500 uppercase">Reason</label>
+                                            <Select value={editPlan.entryReason} onChange={(e) => setEditPlan({ ...editPlan, entryReason: e.target.value })} className="bg-slate-950">
+                                                <option value="Technical">Technical</option>
+                                                <option value="Fundamental">Fundamental</option>
+                                                <option value="Flow">Order Flow</option>
+                                            </Select>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-xs text-slate-500 uppercase">Chart URL</label>
+                                        <Input
+                                            value={editPlan.beforeImageUrl || ""}
+                                            onChange={e => setEditPlan({ ...editPlan, beforeImageUrl: e.target.value })}
+                                            className="bg-slate-950"
+                                            placeholder="https://..."
+                                        />
+                                    </div>
+
                                     <div className="space-y-2">
                                         <label className="text-xs text-slate-500 uppercase">Notes</label>
                                         <textarea
@@ -350,6 +427,6 @@ export default function TradeDetailsPage() {
 
                 </div>
             </div>
-        </div>
+        </div >
     )
 }
