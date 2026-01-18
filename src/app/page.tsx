@@ -143,7 +143,9 @@ export default function Home() {
             </div>
 
             <div className="h-96">
-              <AnalyticsChart /* data={trades} timeframe={activeTab} */ />
+              <div className="h-96">
+                <AnalyticsChart trades={trades} timeframe={activeTab} />
+              </div>
             </div>
 
             {/* Trade History & Filters */}
