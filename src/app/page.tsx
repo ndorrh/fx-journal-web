@@ -1,8 +1,12 @@
 "use client";
+import { useState, useEffect } from "react"
 import { JournalEntryForm } from "@/components/features/JournalEntryForm"
 import { AnalyticsChart } from "@/components/features/AnalyticsChart"
+import { TradeHistory } from "@/components/features/TradeHistory"
 import { useAuth } from "@/context/AuthContext"
 import { Button } from "@/components/ui/Button"
+import { getTrades } from "@/lib/services/tradeService"
+import { cn } from "@/lib/utils"
 
 function AuthButton() {
   const { user, signInWithGoogle, logout } = useAuth()
@@ -30,6 +34,45 @@ function AuthButton() {
 
 
 export default function Home() {
+  const { user } = useAuth()
+  const [activeTab, setActiveTab] = useState("Daily")
+  const [trades, setTrades] = useState<any[]>([])
+  const [winRate, setWinRate] = useState("0%")
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    async function loadTrades() {
+      if (!user) {
+        setTrades([])
+        setWinRate("0%")
+        return
+      }
+
+      try {
+        setLoading(true)
+        const data = await getTrades(user.uid)
+        setTrades(data)
+
+        const wins = data.filter((t: any) => t.result === "Win").length
+        const totalForCalc = data.length
+
+        if (totalForCalc > 0) {
+          const rate = (wins / totalForCalc) * 100
+          setWinRate(rate.toFixed(0) + "%")
+        } else {
+          setWinRate("0%")
+        }
+
+      } catch (error) {
+        console.error("Failed to load trades", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadTrades()
+  }, [user])
+
   return (
     <main className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-[#0a0f1e] to-black text-white p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-10">
@@ -44,10 +87,12 @@ export default function Home() {
           </div>
 
           <div className="flex items-center space-x-4">
-            {/* Stats Summary Placeholders */}
-            <div className="hidden md:block bg-slate-800/50 backdrop-blur rounded-lg p-3 border border-slate-700">
+            {/* Stats Summary */}
+            <div className="hidden md:block bg-slate-800/50 backdrop-blur rounded-lg p-3 border border-slate-700 min-w-[120px] text-center">
               <div className="text-xs text-slate-400 uppercase tracking-wider">Win Rate</div>
-              <div className="text-xl font-bold text-green-400">68%</div>
+              <div className={`text-xl font-bold ${parseFloat(winRate) >= 50 ? 'text-green-400' : 'text-red-400'}`}>
+                {loading ? "..." : winRate}
+              </div>
             </div>
 
             <AuthButton />
@@ -62,17 +107,33 @@ export default function Home() {
             <JournalEntryForm />
           </div>
 
-          {/* Right Column: Dashboard/Analytic Views (Placeholder for now) */}
+          {/* Right Column: Dashboard/Analytic Views */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Navigation Tabs Placeholder */}
+            {/* Navigation Tabs */}
             <div className="flex space-x-1 bg-slate-900 p-1 rounded-lg border border-slate-800 w-fit">
-              <button className="px-4 py-2 bg-slate-800 rounded-md text-sm font-medium shadow text-white">Daily</button>
-              <button className="px-4 py-2 hover:bg-slate-800/50 rounded-md text-sm font-medium text-slate-400">Weekly</button>
-              <button className="px-4 py-2 hover:bg-slate-800/50 rounded-md text-sm font-medium text-slate-400">Monthly</button>
+              {["Daily", "Weekly", "Monthly"].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={cn(
+                    "px-4 py-2 rounded-md text-sm font-medium transition-all duration-200",
+                    activeTab === tab
+                      ? "bg-slate-800 text-white shadow shadow-cyan-900/10"
+                      : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-200"
+                  )}
+                >
+                  {tab}
+                </button>
+              ))}
             </div>
 
             <div className="h-96">
-              <AnalyticsChart />
+              <AnalyticsChart /* data={trades} timeframe={activeTab} */ />
+            </div>
+
+            {/* Trade History & Filters */}
+            <div>
+              <TradeHistory trades={trades} />
             </div>
           </div>
         </div>

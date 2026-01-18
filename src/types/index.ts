@@ -11,6 +11,11 @@ export interface Trade {
     pnl?: number; // Profit and Loss amount
     session: string;
 
+    // Mental & Context
+    psychology?: string;
+    notes?: string;
+    tags?: string[];
+
     strategy: StrategyType;
 
     // Supply & Demand Specifics

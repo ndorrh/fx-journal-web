@@ -99,3 +99,14 @@
   border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
+
+/* Fix for date inputs in dark mode */
+::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.6;
+  cursor: pointer;
+}
+
+::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}

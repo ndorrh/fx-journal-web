@@ -5,20 +5,18 @@ import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
 import { Select } from "@/components/ui/Select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
-import { cn } from "@/lib/utils"
-// import { Upload } from "lucide-react" // Expecting lucide-react to be available
 import { useAuth } from "@/context/AuthContext"
-import { addTrade, uploadTradeImage } from "@/lib/services/tradeService"
+import { addTrade } from "@/lib/services/tradeService"
 import { Trade } from "@/types"
 
 type StrategyType = "SupplyDemand" | "ICT" | "Other"
 
 export function JournalEntryForm() {
     const { user } = useAuth()
-    const [strategy, setStrategy] = useState<StrategyType>("SupplyDemand")
     const [loading, setLoading] = useState(false)
 
     // Form State
+    const [strategy, setStrategy] = useState<StrategyType>("SupplyDemand")
     const [pair, setPair] = useState("EURUSD")
     const [date, setDate] = useState("")
     const [direction, setDirection] = useState<"Long" | "Short">("Long")
@@ -27,22 +25,16 @@ export function JournalEntryForm() {
     const [pnl, setPnl] = useState("")
     const [session, setSession] = useState("NY")
 
+    // Mental & Context
+    const [psychology, setPsychology] = useState("")
+    const [notes, setNotes] = useState("")
+    const [tags, setTags] = useState("")
+
     // Strategy Specifics
     const [zoneType, setZoneType] = useState("Drop-Base-Rally")
     const [confirmation, setConfirmation] = useState("Limit Order")
     const [pdArray, setPdArray] = useState("Order Block")
     const [liquidityTarget, setLiquidityTarget] = useState("Previous Daily High/Low")
-
-    // Images
-    const [beforeImage, setBeforeImage] = useState<File | null>(null)
-    const [afterImage, setAfterImage] = useState<File | null>(null)
-
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, type: "before" | "after") => {
-        if (e.target.files && e.target.files[0]) {
-            if (type === "before") setBeforeImage(e.target.files[0])
-            else setAfterImage(e.target.files[0])
-        }
-    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -53,16 +45,6 @@ export function JournalEntryForm() {
 
         setLoading(true)
         try {
-            let beforeImageUrl = ""
-            let afterImageUrl = ""
-
-            if (beforeImage) {
-                beforeImageUrl = await uploadTradeImage(beforeImage, user.uid)
-            }
-            if (afterImage) {
-                afterImageUrl = await uploadTradeImage(afterImage, user.uid)
-            }
-
             const tradeData: Omit<Trade, "id" | "createdAt"> = {
                 userId: user.uid,
                 pair,
@@ -73,16 +55,26 @@ export function JournalEntryForm() {
                 pnl: parseFloat(pnl) || 0,
                 session,
                 strategy,
+
+                // New Fields
+                psychology,
+                notes,
+                tags: tags.split(",").map(t => t.trim()).filter(t => t !== ""),
+
                 // Conditional fields
                 ...(strategy === "SupplyDemand" ? { zoneType, confirmation } : {}),
                 ...(strategy === "ICT" ? { pdArray, liquidityTarget } : {}),
-                beforeImageUrl,
-                afterImageUrl
             }
 
             await addTrade(tradeData)
             alert("Trade Logged Successfully!")
-            // Reset form or redirect could go here
+
+            // Optional: Reset form here if desired
+            setNotes("")
+            setTags("")
+            setPnl("")
+            setRr("")
+
         } catch (error) {
             console.error("Error logging trade:", error)
             alert("Failed to log trade")
@@ -118,7 +110,24 @@ export function JournalEntryForm() {
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-slate-300">Date & Time</label>
-                                <Input type="datetime-local" className="text-slate-100" value={date} onChange={(e) => setDate(e.target.value)} />
+                                <Input
+                                    type="datetime-local"
+                                    className="text-slate-100 placeholder-slate-500 cursor-pointer"
+                                    value={date}
+                                    max={new Date().toISOString().slice(0, 16)}
+                                    onChange={(e) => setDate(e.target.value)}
+                                    onClick={(e) => {
+                                        try {
+                                            // @ts-ignore
+                                            if (typeof e.currentTarget.showPicker === "function") {
+                                                // @ts-ignore
+                                                e.currentTarget.showPicker();
+                                            }
+                                        } catch (error) {
+                                            // Ignore
+                                        }
+                                    }}
+                                />
                             </div>
 
                             <div className="space-y-2">
@@ -169,9 +178,45 @@ export function JournalEntryForm() {
                             </div>
                         </div>
 
+                        {/* Mental & Context Section */}
+                        <div className="space-y-4 pt-4 border-t border-slate-700/50">
+                            <h3 className="text-lg font-semibold text-slate-200">Mental & Context</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-slate-300">Psychology / State of Mind</label>
+                                    <Select value={psychology} onChange={(e) => setPsychology(e.target.value)}>
+                                        <option value="">Select...</option>
+                                        <option value="Confident">Confident</option>
+                                        <option value="Anxious">Anxious</option>
+                                        <option value="FOMO">FOMO (Fear Of Missing Out)</option>
+                                        <option value="Revenge">Revenge Trading</option>
+                                        <option value="Patient">Patient / Calm</option>
+                                        <option value="Tired">Tired / Distracted</option>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-slate-300">Tags (comma separated)</label>
+                                    <Input
+                                        placeholder="e.g. A+ Setup, News Event, Mistake"
+                                        value={tags}
+                                        onChange={(e) => setTags(e.target.value)}
+                                    />
+                                </div>
+                                <div className="space-y-2 md:col-span-2">
+                                    <label className="text-sm font-medium text-slate-300">Notes / Strategy</label>
+                                    <textarea
+                                        className="flex min-h-[100px] w-full rounded-md border border-slate-700 bg-slate-900/50 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 disabled:cursor-not-allowed disabled:opacity-50"
+                                        placeholder="Describe your thought process, entry triggers, and management..."
+                                        value={notes}
+                                        onChange={(e) => setNotes(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
                         {/* Strategy Selection */}
                         <div className="space-y-2 pt-4 border-t border-slate-700/50">
-                            <label className="text-sm font-medium text-slate-300">Strategy Used</label>
+                            <label className="text-sm font-medium text-slate-300">Strategy Type (Specifics)</label>
                             <div className="flex space-x-2">
                                 <Button
                                     type="button"
@@ -235,33 +280,6 @@ export function JournalEntryForm() {
                                     </div>
                                 </div>
                             )}
-                        </div>
-
-                        {/* Image Upload Section */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
-                            {/* Before Image */}
-                            <div className="border-2 border-dashed border-slate-700 rounded-lg p-6 flex flex-col items-center justify-center text-slate-400 hover:border-slate-500 transition-colors cursor-pointer bg-slate-900/20 relative">
-                                <Input
-                                    type="file"
-                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                    accept="image/*"
-                                    onChange={(e) => handleImageChange(e, "before")}
-                                />
-                                <span className="text-sm font-medium">{beforeImage ? beforeImage.name : 'Upload "Before" Chart'}</span>
-                                <span className="text-xs text-slate-500 mt-1">Click to select or drag file</span>
-                            </div>
-
-                            {/* After Image */}
-                            <div className="border-2 border-dashed border-slate-700 rounded-lg p-6 flex flex-col items-center justify-center text-slate-400 hover:border-slate-500 transition-colors cursor-pointer bg-slate-900/20 relative">
-                                <Input
-                                    type="file"
-                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                    accept="image/*"
-                                    onChange={(e) => handleImageChange(e, "after")}
-                                />
-                                <span className="text-sm font-medium">{afterImage ? afterImage.name : 'Upload "After" Chart'}</span>
-                                <span className="text-xs text-slate-500 mt-1">Click to select or drag file</span>
-                            </div>
                         </div>
 
                         <Button size="lg" className="w-full mt-4 bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg shadow-cyan-900/20" disabled={loading}>

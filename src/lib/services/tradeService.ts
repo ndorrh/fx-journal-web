@@ -30,8 +30,10 @@ export const getTrades = async (userId: string) => {
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Trade));
 };
 
+/*
 export const uploadTradeImage = async (file: File, userId: string): Promise<string> => {
     const storageRef = ref(storage, `users/${userId}/trades/${Date.now()}_${file.name}`);
     const snapshot = await uploadBytes(storageRef, file);
     return await getDownloadURL(snapshot.ref);
 }
+*/
