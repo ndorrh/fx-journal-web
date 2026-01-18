@@ -17,7 +17,12 @@ export default function TradeDetailsPage() {
     const router = useRouter()
     const [trade, setTrade] = useState<Trade | null>(null)
     const [loading, setLoading] = useState(true)
+
     const [saving, setSaving] = useState(false)
+
+    // Editing State (Phase 1)
+    const [isEditingPlan, setIsEditingPlan] = useState(false)
+    const [editPlan, setEditPlan] = useState<Partial<Trade>>({})
 
     // Execution State
     const [exitPrice, setExitPrice] = useState("")
@@ -44,6 +49,15 @@ export default function TradeDetailsPage() {
                         setPostTradeEmotion(t.postTradeEmotion || "")
                         setLessonsLearned(t.lessonsLearned || "")
                         setAfterImageUrl(t.afterImageUrl || "")
+
+                        // Initialize Edit Form
+                        setEditPlan({
+                            plannedEntry: t.plannedEntry,
+                            plannedSL: t.plannedSL,
+                            plannedTP: t.plannedTP,
+                            riskAmount: t.riskAmount,
+                            notes: t.notes
+                        })
                     }
                 })
                 .finally(() => setLoading(false))
@@ -70,6 +84,25 @@ export default function TradeDetailsPage() {
         } catch (e) {
             console.error(e)
             alert("Failed to update trade")
+        } finally {
+            setSaving(false)
+        }
+    }
+
+    const handleSavePlan = async () => {
+        if (!user || !trade || !trade.id) return
+        setSaving(true)
+        try {
+            await updateTrade(user.uid, trade.id, {
+                ...editPlan
+            })
+            // Update local state
+            setTrade(prev => prev ? ({ ...prev, ...editPlan }) : null)
+            setIsEditingPlan(false)
+            alert("Plan Updated!")
+        } catch (e) {
+            console.error(e)
+            alert("Failed to update plan")
         } finally {
             setSaving(false)
         }
@@ -104,50 +137,113 @@ export default function TradeDetailsPage() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-                    {/* LEFT: The Plan (Read Only) */}
+                    {/* LEFT: The Plan (Editable) */}
                     <Card className="glass-card bg-slate-900/40 border-slate-800 h-full">
-                        <CardHeader>
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <CardTitle className="text-cyan-400">Phase 1: Trade Plan</CardTitle>
+                            {!isEditingPlan ? (
+                                <Button size="sm" variant="ghost" className="h-8 text-slate-400 hover:text-cyan-400" onClick={() => setIsEditingPlan(true)}>
+                                    Edit Plan
+                                </Button>
+                            ) : (
+                                <div className="flex gap-2">
+                                    <Button size="sm" variant="ghost" className="h-8 text-red-400" onClick={() => setIsEditingPlan(false)}>Cancel</Button>
+                                    <Button size="sm" className="h-8 bg-cyan-600 hover:bg-cyan-500 text-white" onClick={handleSavePlan} disabled={saving}>Save</Button>
+                                </div>
+                            )}
                         </CardHeader>
                         <CardContent className="space-y-6 text-slate-300">
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-slate-950/50 p-4 rounded-lg border border-slate-800">
-                                <div>
-                                    <div className="text-xs text-slate-500 uppercase">Entry</div>
-                                    <div className="font-mono text-lg">{trade.plannedEntry}</div>
-                                </div>
-                                <div>
-                                    <div className="text-xs text-slate-500 uppercase">Stop Loss</div>
-                                    <div className="font-mono text-lg text-red-400">{trade.plannedSL}</div>
-                                </div>
-                                <div>
-                                    <div className="text-xs text-slate-500 uppercase">Target</div>
-                                    <div className="font-mono text-lg text-green-400">{trade.plannedTP}</div>
-                                </div>
-                                <div>
-                                    <div className="text-xs text-slate-500 uppercase">Risk ($)</div>
-                                    <div className="font-mono text-lg text-amber-400">{trade.riskAmount ? `$${trade.riskAmount}` : '--'}</div>
-                                </div>
-                            </div>
-
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="text-xs text-slate-500 uppercase block mb-1">Strategy & Setup</label>
-                                    <div className="p-3 bg-slate-900 rounded border border-slate-700">
-                                        <p><span className="text-slate-500">Strategy:</span> {trade.strategy}</p>
-                                        <p><span className="text-slate-500">Reason:</span> {trade.entryReason}</p>
-                                        <p className="mt-2 italic text-slate-400 border-t border-slate-800 pt-2">"{trade.notes}"</p>
-                                    </div>
-                                </div>
-
-                                {trade.beforeImageUrl && (
-                                    <div>
-                                        <label className="text-xs text-slate-500 uppercase block mb-1">Setup Chart</label>
-                                        <div className="rounded-lg overflow-hidden border border-slate-700">
-                                            <img src={trade.beforeImageUrl} alt="Plan" className="w-full h-auto object-cover hover:scale-105 transition-transform duration-500 cursor-pointer" onClick={() => window.open(trade.beforeImageUrl, '_blank')} />
+                            {!isEditingPlan ? (
+                                <>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-slate-950/50 p-4 rounded-lg border border-slate-800">
+                                        <div>
+                                            <div className="text-xs text-slate-500 uppercase">Entry</div>
+                                            <div className="font-mono text-lg">{trade.plannedEntry}</div>
+                                        </div>
+                                        <div>
+                                            <div className="text-xs text-slate-500 uppercase">Stop Loss</div>
+                                            <div className="font-mono text-lg text-red-400">{trade.plannedSL}</div>
+                                        </div>
+                                        <div>
+                                            <div className="text-xs text-slate-500 uppercase">Target</div>
+                                            <div className="font-mono text-lg text-green-400">{trade.plannedTP}</div>
+                                        </div>
+                                        <div>
+                                            <div className="text-xs text-slate-500 uppercase">Risk ($)</div>
+                                            <div className="font-mono text-lg text-amber-400">{trade.riskAmount ? `$${trade.riskAmount}` : '--'}</div>
                                         </div>
                                     </div>
-                                )}
-                            </div>
+
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="text-xs text-slate-500 uppercase block mb-1">Strategy & Setup</label>
+                                            <div className="p-3 bg-slate-900 rounded border border-slate-700">
+                                                <p><span className="text-slate-500">Strategy:</span> {trade.strategy}</p>
+                                                <p><span className="text-slate-500">Reason:</span> {trade.entryReason}</p>
+                                                <p className="mt-2 italic text-slate-400 border-t border-slate-800 pt-2">"{trade.notes}"</p>
+                                            </div>
+                                        </div>
+
+                                        {trade.beforeImageUrl && (
+                                            <div>
+                                                <label className="text-xs text-slate-500 uppercase block mb-1">Setup Chart</label>
+                                                <div className="rounded-lg overflow-hidden border border-slate-700">
+                                                    <img src={trade.beforeImageUrl} alt="Plan" className="w-full h-auto object-cover hover:scale-105 transition-transform duration-500 cursor-pointer" onClick={() => window.open(trade.beforeImageUrl, '_blank')} />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="space-y-6 animate-in fade-in">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-xs text-slate-500 uppercase">Entry</label>
+                                            <Input
+                                                type="number" step="0.00001"
+                                                value={editPlan.plannedEntry || ""}
+                                                onChange={e => setEditPlan({ ...editPlan, plannedEntry: parseFloat(e.target.value) })}
+                                                className="bg-slate-950 block"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs text-red-400/80 uppercase">Stop Loss</label>
+                                            <Input
+                                                type="number" step="0.00001"
+                                                value={editPlan.plannedSL || ""}
+                                                onChange={e => setEditPlan({ ...editPlan, plannedSL: parseFloat(e.target.value) })}
+                                                className="bg-slate-950 border-red-900/40 focus:border-red-500"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs text-green-400/80 uppercase">Target</label>
+                                            <Input
+                                                type="number" step="0.00001"
+                                                value={editPlan.plannedTP || ""}
+                                                onChange={e => setEditPlan({ ...editPlan, plannedTP: parseFloat(e.target.value) })}
+                                                className="bg-slate-950 border-green-900/40 focus:border-green-500"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs text-amber-400/80 uppercase">Risk ($)</label>
+                                            <Input
+                                                type="number" step="1"
+                                                value={editPlan.riskAmount || ""}
+                                                onChange={e => setEditPlan({ ...editPlan, riskAmount: parseFloat(e.target.value) })}
+                                                className="bg-slate-950 border-amber-900/40 focus:border-amber-500"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs text-slate-500 uppercase">Notes</label>
+                                        <textarea
+                                            value={editPlan.notes || ""}
+                                            onChange={e => setEditPlan({ ...editPlan, notes: e.target.value })}
+                                            className="w-full h-32 bg-slate-950 border border-slate-700 rounded-md p-3 text-sm focus:border-cyan-500 focus:outline-none"
+                                        />
+                                    </div>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 
