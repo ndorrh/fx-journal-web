@@ -98,7 +98,7 @@ export function AnalyticsChart({ trades = [], timeframe = "Daily" }: AnalyticsCh
                     <Tooltip
                         contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', color: '#f8fafc' }}
                         itemStyle={{ color: '#22d3ee' }}
-                        formatter={(value: number) => [`$${value.toFixed(2)}`, "Cumulative PnL"]}
+                        formatter={(value: any) => [`$${(value || 0).toFixed(2)}`, "Cumulative PnL"]}
                         labelFormatter={(label) => `Date: ${label}`}
                     />
                     <Area type="monotone" dataKey="cumulative" stroke="#22d3ee" fillOpacity={1} fill="url(#colorPnL)" strokeWidth={2} />
