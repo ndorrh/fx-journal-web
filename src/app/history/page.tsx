@@ -1,0 +1,140 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { useAuth } from "@/context/AuthContext"
+import { getTrades } from "@/lib/services/tradeService"
+import { Trade } from "@/types"
+import { useRouter } from "next/navigation"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
+import { ArrowLeft, ArrowUpRight, Search, Filter } from "lucide-react"
+import { Input } from "@/components/ui/Input"
+import { Button } from "@/components/ui/Button"
+
+export default function HistoryPage() {
+    const { user } = useAuth()
+    const router = useRouter()
+    const [trades, setTrades] = useState<Trade[]>([])
+    const [loading, setLoading] = useState(true)
+    const [searchTerm, setSearchTerm] = useState("")
+
+    useEffect(() => {
+        if (user) {
+            getTrades(user.uid).then(data => {
+                setTrades(data.sort((a, b) => b.date - a.date))
+                setLoading(false)
+            })
+        }
+    }, [user])
+
+    const filteredTrades = trades.filter(t =>
+        t.instrument.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        t.strategy.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        t.status.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+
+    if (loading) return <div className="p-8 text-white">Loading history...</div>
+
+    return (
+        <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-[#0a0f1e] to-black text-white p-4 md:p-8">
+            <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in">
+
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-500">
+                            Trade Journal
+                        </h1>
+                        <p className="text-slate-400 mt-1">Full history of all executions and plans.</p>
+                    </div>
+                    <Button variant="ghost" onClick={() => router.push('/')} className="text-slate-400 hover:text-white">
+                        <ArrowLeft className="w-4 h-4 mr-2" />
+                        Back to Dashboard
+                    </Button>
+                </div>
+
+                <Card className="glass-card bg-slate-950/50 border-slate-800">
+                    <CardHeader className="flex flex-row items-center justify-between pb-4">
+                        <CardTitle className="text-slate-200">All Entries</CardTitle>
+                        <div className="relative w-64">
+                            <Search className="absolute left-2 top-2.5 h-4 w-4 text-slate-500" />
+                            <Input
+                                placeholder="Search pair, strategy..."
+                                className="pl-8 bg-slate-900/50 border-slate-800 focus:border-cyan-500/50 text-sm"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="overflow-x-auto rounded-lg border border-slate-800">
+                            <table className="w-full text-sm text-left">
+                                <thead className="text-xs text-slate-400 uppercase bg-slate-900/80">
+                                    <tr>
+                                        <th className="px-6 py-3">Date</th>
+                                        <th className="px-6 py-3">Instrument</th>
+                                        <th className="px-6 py-3">Side</th>
+                                        <th className="px-6 py-3">Strategy</th>
+                                        <th className="px-6 py-3 text-right">Entry</th>
+                                        <th className="px-6 py-3 text-right">Exit</th>
+                                        <th className="px-6 py-3 text-right">PnL</th>
+                                        <th className="px-6 py-3 text-right">R</th>
+                                        <th className="px-6 py-3 text-center">Status</th>
+                                        <th className="px-6 py-3 text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-800 bg-slate-950/30">
+                                    {filteredTrades.map((trade) => (
+                                        <tr
+                                            key={trade.id}
+                                            className="hover:bg-slate-800/50 transition-colors cursor-pointer group"
+                                            onClick={() => router.push(`/trades/${trade.id}`)}
+                                        >
+                                            <td className="px-6 py-4 font-medium text-slate-300">
+                                                {new Date(trade.date).toLocaleDateString()}
+                                                <div className="text-xs text-slate-500">{new Date(trade.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                                            </td>
+                                            <td className="px-6 py-4 font-bold text-slate-200">{trade.instrument}</td>
+                                            <td className="px-6 py-4">
+                                                <span className={`px-2 py-1 rounded text-xs font-medium ${trade.direction === 'Long' ? 'text-cyan-400 bg-cyan-950/30 border border-cyan-900/50' : 'text-red-400 bg-red-950/30 border border-red-900/50'}`}>
+                                                    {trade.direction}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-slate-400">{trade.strategy}</td>
+                                            <td className="px-6 py-4 text-right font-mono text-slate-300">{trade.plannedEntry}</td>
+                                            <td className="px-6 py-4 text-right font-mono text-slate-300">{trade.exitPrice || '-'}</td>
+                                            <td className={`px-6 py-4 text-right font-bold font-mono ${!trade.pnl ? 'text-slate-500' : trade.pnl > 0 ? 'text-green-400' : trade.pnl < 0 ? 'text-red-400' : 'text-slate-400'}`}>
+                                                {trade.pnl ? `$${trade.pnl.toFixed(2)}` : '-'}
+                                            </td>
+                                            <td className={`px-6 py-4 text-right font-mono ${!trade.actualRR ? 'text-slate-500' : trade.actualRR > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                {trade.actualRR ? `${trade.actualRR}R` : '-'}
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${trade.status === 'Open' ? 'text-blue-400 bg-blue-950/30 border-blue-900' :
+                                                        trade.status === 'Closed' ? 'text-purple-400 bg-purple-950/30 border-purple-900' :
+                                                            'text-amber-400 bg-amber-950/30 border-amber-900'
+                                                    }`}>
+                                                    {trade.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <Button size="icon" variant="ghost" className="h-8 w-8 text-slate-400 opacity-0 group-hover:opacity-100 transition-all hover:text-cyan-400 hover:bg-cyan-950/30">
+                                                    <ArrowUpRight className="h-4 w-4" />
+                                                </Button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {filteredTrades.length === 0 && (
+                                        <tr>
+                                            <td colSpan={10} className="px-6 py-12 text-center text-slate-500">
+                                                No trades found. Start by logging a new plan!
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
+    )
+}

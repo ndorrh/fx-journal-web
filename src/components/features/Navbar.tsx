@@ -33,6 +33,10 @@ export function Navbar({ onNewTradeClick }: NavbarProps) {
                     <div className="hidden md:flex items-center gap-6">
                         {user ? (
                             <div className="flex items-center gap-4">
+                                <Link href="/history" className="text-slate-400 hover:text-white transition-colors flex items-center gap-2 text-sm font-medium">
+                                    <LayoutDashboard size={18} />
+                                    History
+                                </Link>
                                 <Link href="/analytics" className="text-slate-400 hover:text-white transition-colors flex items-center gap-2 text-sm font-medium mr-2">
                                     <LineChart size={18} />
                                     Analytics
@@ -105,6 +109,13 @@ export function Navbar({ onNewTradeClick }: NavbarProps) {
                                         <div className="text-xs text-slate-500">Pro Trader</div>
                                     </div>
                                 </div>
+
+                                <Link href="/history" className="block w-full mb-2" onClick={() => setIsMobileMenuOpen(false)}>
+                                    <div className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 rounded-md transition-colors">
+                                        <LayoutDashboard size={18} />
+                                        History
+                                    </div>
+                                </Link>
 
                                 <Link href="/analytics" className="block w-full mb-2" onClick={() => setIsMobileMenuOpen(false)}>
                                     <div className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 rounded-md transition-colors">
