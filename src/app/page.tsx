@@ -104,7 +104,22 @@ export default function Home() {
 
           {/* Left Column: Entry Form */}
           <div className="lg:col-span-1">
-            <JournalEntryForm />
+            <JournalEntryForm onSuccess={() => {
+              // Trigger reload
+              const loadTrades = async () => {
+                if (!user) return
+                try {
+                  const data = await getTrades(user.uid)
+                  setTrades(data)
+                  // Update winrate
+                  const wins = data.filter((t: any) => t.result === "Win").length
+                  if (data.length > 0) {
+                    setWinRate(((wins / data.length) * 100).toFixed(0) + "%")
+                  }
+                } catch (e) { console.error(e) }
+              }
+              loadTrades()
+            }} />
           </div>
 
           {/* Right Column: Dashboard/Analytic Views */}

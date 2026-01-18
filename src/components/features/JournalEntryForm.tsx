@@ -11,9 +11,14 @@ import { Trade } from "@/types"
 
 type StrategyType = "SupplyDemand" | "ICT" | "Other"
 
-export function JournalEntryForm() {
+interface JournalEntryFormProps {
+    onSuccess?: () => void
+}
+
+export function JournalEntryForm({ onSuccess }: JournalEntryFormProps) {
     const { user } = useAuth()
     const [loading, setLoading] = useState(false)
+    const [successMsg, setSuccessMsg] = useState("")
 
     // Form State
     const [strategy, setStrategy] = useState<StrategyType>("SupplyDemand")
@@ -44,6 +49,7 @@ export function JournalEntryForm() {
         }
 
         setLoading(true)
+        setSuccessMsg("") // Reset
         try {
             const tradeData: Omit<Trade, "id" | "createdAt"> = {
                 userId: user.uid,
@@ -67,7 +73,13 @@ export function JournalEntryForm() {
             }
 
             await addTrade(tradeData)
-            alert("Trade Logged Successfully!")
+
+            // Success Feedback
+            setSuccessMsg("Trade Logged Successfully!")
+            setTimeout(() => setSuccessMsg(""), 3000)
+
+            // Trigger refresh in parent
+            if (onSuccess) onSuccess()
 
             // Optional: Reset form here if desired
             setNotes("")
@@ -93,6 +105,13 @@ export function JournalEntryForm() {
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-6">
+
+                        {/* Success Message Banner */}
+                        {successMsg && (
+                            <div className="bg-green-500/10 border border-green-500/50 text-green-400 px-4 py-3 rounded-md text-center animate-in fade-in slide-in-from-top-2 font-medium">
+                                {successMsg}
+                            </div>
+                        )}
 
                         {/* General Information Section */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

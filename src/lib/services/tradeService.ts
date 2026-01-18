@@ -3,11 +3,14 @@ import { collection, addDoc, getDocs, query, where, orderBy, Timestamp } from "f
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Trade } from "@/types";
 
+const USERS_COLLECTION = "users";
 const TRADES_COLLECTION = "trades";
 
 export const addTrade = async (trade: Omit<Trade, "id" | "createdAt">) => {
     try {
-        const docRef = await addDoc(collection(db, TRADES_COLLECTION), {
+        // Store in users/{userId}/trades/{tradeId}
+        const userTradesRef = collection(db, USERS_COLLECTION, trade.userId, TRADES_COLLECTION);
+        const docRef = await addDoc(userTradesRef, {
             ...trade,
             createdAt: Timestamp.now().toMillis(),
         });
@@ -20,14 +23,20 @@ export const addTrade = async (trade: Omit<Trade, "id" | "createdAt">) => {
 };
 
 export const getTrades = async (userId: string) => {
-    const q = query(
-        collection(db, TRADES_COLLECTION),
-        where("userId", "==", userId),
-        orderBy("date", "desc")
-    );
+    try {
+        const userTradesRef = collection(db, USERS_COLLECTION, userId, TRADES_COLLECTION);
+        // No need for 'where userId' because we are inside the user's specific collection
+        const q = query(
+            userTradesRef,
+            orderBy("date", "desc")
+        );
 
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Trade));
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Trade));
+    } catch (e) {
+        console.error("Error getting trades: ", e);
+        return [];
+    }
 };
 
 /*
