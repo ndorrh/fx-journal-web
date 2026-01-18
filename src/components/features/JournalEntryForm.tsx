@@ -23,6 +23,8 @@ export function JournalEntryForm({ onSuccess }: JournalEntryFormProps) {
     const [direction, setDirection] = useState<"Long" | "Short">("Long")
     const [date, setDate] = useState(new Date().toISOString().slice(0, 16))
     const [session, setSession] = useState("NY")
+    const [tradeType, setTradeType] = useState("Day Trade")
+    const [marketCondition, setMarketCondition] = useState("Trending")
 
     // --- Execution Plan ---
     const [plannedEntry, setPlannedEntry] = useState("")
@@ -76,7 +78,9 @@ export function JournalEntryForm({ onSuccess }: JournalEntryFormProps) {
                 date: date ? new Date(date).getTime() : Date.now(),
                 instrument: pair,
                 direction,
-                strategy, // Strategy is now StrategyType
+                strategy,
+                tradeType,
+                marketCondition,
 
                 // Planning Phase
                 plannedEntry: parseFloat(plannedEntry) || 0,
@@ -95,7 +99,7 @@ export function JournalEntryForm({ onSuccess }: JournalEntryFormProps) {
 
                 // Conditional fields
                 ...(strategy === "SupplyDemand" ? { zoneType, confirmation } : {}),
-                ...(strategy === "ICT" ? { pdArray, liquidityTarget } : {}),
+                ...(strategy === "ICT" ? { pdArray, liquidityTarget, confirmation } : {}),
             }
 
             await addTrade(tradeData)
@@ -152,17 +156,63 @@ export function JournalEntryForm({ onSuccess }: JournalEntryFormProps) {
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-slate-300">Instrument</label>
                                     <Select value={pair} onChange={(e) => setPair(e.target.value)} className="h-11">
-                                        <option value="EURUSD">EURUSD</option>
-                                        <option value="GBPUSD">GBPUSD</option>
-                                        <option value="XAUUSD">GOLD</option>
-                                        <option value="BTCUSD">BITCOIN</option>
-                                        <option value="US30">US30</option>
-                                        <option value="NAS100">NAS100</option>
+                                        <optgroup label="Forex Majors">
+                                            <option value="EURUSD">EURUSD</option>
+                                            <option value="GBPUSD">GBPUSD</option>
+                                            <option value="USDJPY">USDJPY</option>
+                                            <option value="USDCAD">USDCAD</option>
+                                            <option value="AUDUSD">AUDUSD</option>
+                                            <option value="USDCHF">USDCHF</option>
+                                        </optgroup>
+                                        <optgroup label="Metals & Crypto">
+                                            <option value="XAUUSD">GOLD (XAUUSD)</option>
+                                            <option value="BTCUSD">BITCOIN</option>
+                                            <option value="ETHUSD">ETHEREUM</option>
+                                        </optgroup>
+                                        <optgroup label="Indices">
+                                            <option value="US30">US30</option>
+                                            <option value="NAS100">NAS100</option>
+                                            <option value="SPX500">S&P 500</option>
+                                            <option value="GER40">DAX (GER40)</option>
+                                        </optgroup>
+                                        <optgroup label="Stocks">
+                                            <option value="AAPL">Apple</option>
+                                            <option value="TSLA">Tesla</option>
+                                            <option value="NVDA">NVIDIA</option>
+                                            <option value="AMZN">Amazon</option>
+                                        </optgroup>
                                     </Select>
                                 </div>
                                 <div className="space-y-2">
+                                    <label className="text-sm font-medium text-slate-300">Style</label>
+                                    <Select value={tradeType} onChange={(e) => setTradeType(e.target.value)} className="h-11">
+                                        <option value="Scalping">Scalping (M1-M5)</option>
+                                        <option value="Day Trade">Day Trade (M15-H1)</option>
+                                        <option value="Swing">Swing Trade (H4-D1)</option>
+                                        <option value="Position">Position Trade</option>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-slate-300">Condition</label>
+                                    <Select value={marketCondition} onChange={(e) => setMarketCondition(e.target.value)} className="h-11">
+                                        <option value="Trending">Trending</option>
+                                        <option value="Ranging">Ranging / Choppy</option>
+                                        <option value="Volatile">High Volatility</option>
+                                        <option value="Quiet">Low Volatility</option>
+                                        <option value="Reversal">Reversal</option>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-slate-300">Direction</label>
+                                    <div className="flex space-x-2 h-11">
+                                        <Button type="button" variant={direction === "Long" ? "neon" : "outline"} onClick={() => setDirection("Long")} className="flex-1 h-full">Long</Button>
+                                        <Button type="button" variant={direction === "Short" ? "destructive" : "outline"} onClick={() => setDirection("Short")} className="flex-1 h-full">Short</Button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                                <div className="space-y-2">
                                     <label className="text-sm font-medium text-slate-300">Date & Time</label>
-                                    {/* Using standard input here to fix potential calendar popup issues */}
                                     <input
                                         type="datetime-local"
                                         value={date}
@@ -176,14 +226,8 @@ export function JournalEntryForm({ onSuccess }: JournalEntryFormProps) {
                                         <option value="Asia">Asia</option>
                                         <option value="London">London</option>
                                         <option value="NY">New York</option>
+                                        <option value="Overlap">London/NY Overlap</option>
                                     </Select>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium text-slate-300">Direction</label>
-                                    <div className="flex space-x-2 h-11">
-                                        <Button type="button" variant={direction === "Long" ? "neon" : "outline"} onClick={() => setDirection("Long")} className="flex-1 h-full">Long</Button>
-                                        <Button type="button" variant={direction === "Short" ? "destructive" : "outline"} onClick={() => setDirection("Short")} className="flex-1 h-full">Short</Button>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -225,18 +269,19 @@ export function JournalEntryForm({ onSuccess }: JournalEntryFormProps) {
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 items-end">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-end">
                                         <div className="space-y-2">
                                             <label className="text-sm text-slate-400">Size (Lots)</label>
                                             <Input type="number" step="0.01" placeholder="1.0" className="h-10" value={positionSize} onChange={(e) => setPositionSize(e.target.value)} />
                                         </div>
-                                        <div className="space-y-2 col-span-2">
-                                            <label className="text-sm text-slate-400">Primary Confirmation</label>
+                                        <div className="space-y-2">
+                                            <label className="text-sm text-slate-400">Context Class</label>
                                             <Select value={entryReason} onChange={(e) => setEntryReason(e.target.value)} className="h-10">
                                                 <option value="">Select Category...</option>
                                                 <option value="Technical">Technical Structure</option>
                                                 <option value="Fundamental">Fundamental Bias</option>
                                                 <option value="Flow">Order Flow</option>
+                                                <option value="News">News Event</option>
                                             </Select>
                                         </div>
                                     </div>
@@ -262,14 +307,17 @@ export function JournalEntryForm({ onSuccess }: JournalEntryFormProps) {
                                                         <option>Rally-Base-Drop (Supply)</option>
                                                         <option>Rally-Base-Rally</option>
                                                         <option>Drop-Base-Drop</option>
+                                                        <option>Support/Resistance Flip</option>
                                                     </Select>
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <label className="text-xs text-slate-500 uppercase">Trigger</label>
+                                                    <label className="text-xs text-slate-500 uppercase">Trigger / Confirmation</label>
                                                     <Select value={confirmation} onChange={(e) => setConfirmation(e.target.value)} className="h-9 text-sm">
-                                                        <option>Limit Order</option>
-                                                        <option>Engulfing Candle</option>
-                                                        <option>Pinbar rejection</option>
+                                                        <option value="Limit Order">Direct Limit Order (Risk Entry)</option>
+                                                        <option value="Engulfing">Engulfing Candle</option>
+                                                        <option value="Pinbar">Pinbar / Rejection Wick</option>
+                                                        <option value="Inside Bar">Inside Bar Breakout</option>
+                                                        <option value="BOS">Lower timeframe BOS</option>
                                                     </Select>
                                                 </div>
                                             </div>
@@ -283,14 +331,17 @@ export function JournalEntryForm({ onSuccess }: JournalEntryFormProps) {
                                                         <option>Fair Value Gap (FVG)</option>
                                                         <option>Breaker Block</option>
                                                         <option>Mitigation Block</option>
+                                                        <option>Rejection Block</option>
                                                     </Select>
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <label className="text-xs text-slate-500 uppercase">Liquidity</label>
-                                                    <Select value={liquidityTarget} onChange={(e) => setLiquidityTarget(e.target.value)} className="h-9 text-sm">
-                                                        <option>Previous Daily High/Low</option>
-                                                        <option>Equal Highs/Lows</option>
-                                                        <option>Session Liquidity</option>
+                                                    <label className="text-xs text-slate-500 uppercase">Trigger / Entry</label>
+                                                    <Select value={confirmation} onChange={(e) => setConfirmation(e.target.value)} className="h-9 text-sm">
+                                                        <option value="MSS">MSS (Market Structure Shift)</option>
+                                                        <option value="Displacement">Displacement</option>
+                                                        <option value="OTE">OTE (Optimal Trade Entry)</option>
+                                                        <option value="SMT">SMT Divergence</option>
+                                                        <option value="Turtle Soup">Turtle Soup</option>
                                                     </Select>
                                                 </div>
                                             </div>
@@ -315,12 +366,13 @@ export function JournalEntryForm({ onSuccess }: JournalEntryFormProps) {
                                             <option value="Confident">🦅 Confident</option>
                                             <option value="Anxious">😰 Anxious / Hesitant</option>
                                             <option value="Impulsive">⚡ Impulsive / FOMO</option>
-                                            <option value="Bored">🥱 Bored / Forcing</option>
+                                            <option value="Revenge">😡 Revenge / Frustrated</option>
+                                            <option value="Greedy">🤑 Greedy</option>
                                         </Select>
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium text-slate-300">Chart URL</label>
+                                        <label className="text-sm font-medium text-slate-300">Chart URL (Optional)</label>
                                         <Input placeholder="TradingView Link..." value={beforeImageUrl} onChange={(e) => setBeforeImageUrl(e.target.value)} className="h-10 bg-slate-900/50" />
                                     </div>
 

@@ -31,8 +31,12 @@ export function Navbar({ onNewTradeClick }: NavbarProps) {
 
                     {/* Desktop Actions */}
                     <div className="hidden md:flex items-center gap-6">
-                        {user && (
+                        {user ? (
                             <div className="flex items-center gap-4">
+                                <Link href="/analytics" className="text-slate-400 hover:text-white transition-colors flex items-center gap-2 text-sm font-medium mr-2">
+                                    <LineChart size={18} />
+                                    Analytics
+                                </Link>
                                 <Button
                                     onClick={onNewTradeClick}
                                     className="gap-2 bg-cyan-600 hover:bg-cyan-500 text-white border-0 shadow-lg shadow-cyan-900/20"
@@ -47,7 +51,7 @@ export function Navbar({ onNewTradeClick }: NavbarProps) {
                                         <div className="text-sm font-medium text-white">{user.displayName}</div>
                                         <div className="text-xs text-slate-400">Pro Trader</div>
                                     </div>
-                                    <div className="h-10 w-10 rounded-full bg-slate-800 border-2 border-slate-700/50 flex items-center justify-center overflow-hidden shadow-inner">
+                                    <div className="h-10 w-10 rounded-full bg-slate-800 border-2 border-slate-700/50 flex items-center justify-center overflow-hidden shadow-inner hidden lg:flex">
                                         {user.photoURL ? (
                                             <img src={user.photoURL} alt="Profile" className="h-full w-full object-cover" />
                                         ) : (
@@ -61,8 +65,7 @@ export function Navbar({ onNewTradeClick }: NavbarProps) {
                                     Sign Out
                                 </Button>
                             </div>
-                        )}
-                        {!user && (
+                        ) : (
                             <Button onClick={signInWithGoogle} variant="neon">
                                 Connect Journal
                             </Button>
@@ -102,6 +105,14 @@ export function Navbar({ onNewTradeClick }: NavbarProps) {
                                         <div className="text-xs text-slate-500">Pro Trader</div>
                                     </div>
                                 </div>
+
+                                <Link href="/analytics" className="block w-full mb-2" onClick={() => setIsMobileMenuOpen(false)}>
+                                    <div className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 rounded-md transition-colors">
+                                        <LineChart size={18} />
+                                        Analytics
+                                    </div>
+                                </Link>
+
                                 <Button
                                     onClick={() => { onNewTradeClick(); setIsMobileMenuOpen(false) }}
                                     className="w-full justify-start gap-2 mb-2"

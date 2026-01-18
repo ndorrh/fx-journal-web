@@ -11,6 +11,10 @@ export interface Trade {
     direction: "Long" | "Short";
     status: "Planned" | "Open" | "Closed"; // Lifecycle State
 
+    // --- Context & Classification ---
+    tradeType?: string; // "Scalping", "Day Trade", "Swing"
+    marketCondition?: string; // "Trending", "Ranging", "Volatile"
+
     // --- Phase 1: Pre-Trade Planning ---
     plannedEntry: number;
     plannedSL: number;
