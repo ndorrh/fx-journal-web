@@ -15,8 +15,12 @@ export function AnalyticsChart({ trades = [], timeframe = "Daily" }: AnalyticsCh
     const chartData = useMemo(() => {
         if (!trades.length) return [];
 
+        // Only include Closed trades for analytics
+        const closedTrades = trades.filter(t => t.status === "Closed" || t.outcome);
+        if (!closedTrades.length) return [];
+
         const now = new Date();
-        let filteredTrades = [...trades].sort((a, b) => a.date - b.date);
+        let filteredTrades = [...closedTrades].sort((a, b) => a.date - b.date);
         let dataPoints: any[] = [];
 
         if (timeframe === "Daily") {

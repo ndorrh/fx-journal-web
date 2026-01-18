@@ -110,3 +110,8 @@
 ::-webkit-calendar-picker-indicator:hover {
   opacity: 1;
 }
+
+/* Standard way to force dark mode controls */
+input[type="date"], input[type="datetime-local"] {
+  color-scheme: dark;
+}

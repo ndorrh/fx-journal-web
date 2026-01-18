@@ -1,5 +1,5 @@
 import { db, storage } from "@/lib/firebase";
-import { collection, addDoc, getDocs, query, where, orderBy, Timestamp } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where, orderBy, Timestamp, doc, getDoc, updateDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Trade } from "@/types";
 
@@ -36,6 +36,30 @@ export const getTrades = async (userId: string) => {
     } catch (e) {
         console.error("Error getting trades: ", e);
         return [];
+    }
+};
+
+export const getTrade = async (userId: string, tradeId: string): Promise<Trade | null> => {
+    try {
+        const docRef = doc(db, USERS_COLLECTION, userId, TRADES_COLLECTION, tradeId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            return { id: docSnap.id, ...docSnap.data() } as Trade;
+        }
+        return null;
+    } catch (e) {
+        console.error("Error getting trade:", e);
+        throw e;
+    }
+};
+
+export const updateTrade = async (userId: string, tradeId: string, updates: Partial<Trade>) => {
+    try {
+        const docRef = doc(db, USERS_COLLECTION, userId, TRADES_COLLECTION, tradeId);
+        await updateDoc(docRef, updates);
+    } catch (e) {
+        console.error("Error updating trade:", e);
+        throw e;
     }
 };
 

@@ -99,30 +99,30 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Main Content Grid */}
+        {/* Trade Planner Section (Full Width) */}
+        <div className="w-full">
+          <JournalEntryForm onSuccess={() => {
+            // Trigger reload
+            const loadTrades = async () => {
+              if (!user) return
+              try {
+                const data = await getTrades(user.uid)
+                setTrades(data)
+                // Update winrate
+                const wins = data.filter((t: any) => t.result === "Win").length
+                if (data.length > 0) {
+                  setWinRate(((wins / data.length) * 100).toFixed(0) + "%")
+                }
+              } catch (e) { console.error(e) }
+            }
+            loadTrades()
+          }} />
+        </div>
+
+        {/* Analytics & History Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-          {/* Left Column: Entry Form */}
-          <div className="lg:col-span-1">
-            <JournalEntryForm onSuccess={() => {
-              // Trigger reload
-              const loadTrades = async () => {
-                if (!user) return
-                try {
-                  const data = await getTrades(user.uid)
-                  setTrades(data)
-                  // Update winrate
-                  const wins = data.filter((t: any) => t.result === "Win").length
-                  if (data.length > 0) {
-                    setWinRate(((wins / data.length) * 100).toFixed(0) + "%")
-                  }
-                } catch (e) { console.error(e) }
-              }
-              loadTrades()
-            }} />
-          </div>
-
-          {/* Right Column: Dashboard/Analytic Views */}
+          {/* Left Column: Analytics Chart */}
           <div className="lg:col-span-2 space-y-6">
             {/* Navigation Tabs */}
             <div className="flex space-x-1 bg-slate-900 p-1 rounded-lg border border-slate-800 w-fit">
@@ -142,14 +142,14 @@ export default function Home() {
               ))}
             </div>
 
-            <div className="h-96">
-              <div className="h-96">
-                <AnalyticsChart trades={trades} timeframe={activeTab} />
-              </div>
+            <div className="min-h-[400px]">
+              <AnalyticsChart trades={trades} timeframe={activeTab} />
             </div>
+          </div>
 
-            {/* Trade History & Filters */}
-            <div>
+          {/* Right Column: Trade Feed */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-8">
               <TradeHistory trades={trades} />
             </div>
           </div>

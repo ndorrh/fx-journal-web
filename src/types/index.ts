@@ -19,15 +19,15 @@ export interface Trade {
     positionSize: number;
     entryReason: string; // "Technical", "Fundamental"
     preTradeEmotion?: string; // "Calm", "Anxious" (optional at planning)
-    setupType?: StrategyType; // The strategy used for the plan
+    strategy: StrategyType; // The strategy used (e.g. SupplyDemand, ICT)
+    setupType?: StrategyType; // Backward compatibility
 
     // --- Phase 2: Execution & Results ---
-    // These fields are optional because they don't exist until the trade is taken/closed
     actualEntry?: number;
     exitPrice?: number;
     actualRR?: number;
     pnl?: number;
-    outcome?: "Win" | "Loss" | "BE" | "Open";
+    outcome?: "Win" | "Loss" | "BE" | "Open"; // Result
     exitReason?: string;
     postTradeEmotion?: string;
     lessonsLearned?: string;
@@ -35,9 +35,9 @@ export interface Trade {
     // --- Metadata & Analysis ---
     session: string;
     tags: string[];
-    notes?: string; // General notes (appendable)
+    notes?: string;
 
-    // --- Strategy Specifics (Optional based on setupType) ---
+    // --- Strategy Specifics ---
     // Supply & Demand
     zoneType?: string;
     confirmation?: string;
