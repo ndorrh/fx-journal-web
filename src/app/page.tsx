@@ -9,6 +9,8 @@ import { useAuth } from "@/context/AuthContext"
 import { getTrades } from "@/lib/services/tradeService"
 import { cn } from "@/lib/utils"
 
+import { LandingPage } from "@/components/features/LandingPage"
+
 export default function Home() {
   const { user } = useAuth()
   const [activeTab, setActiveTab] = useState("Daily")
@@ -36,6 +38,10 @@ export default function Home() {
   useEffect(() => {
     loadTrades()
   }, [user])
+
+  if (!user) {
+    return <LandingPage />
+  }
 
   return (
     <main className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-[#0a0f1e] to-black text-white">

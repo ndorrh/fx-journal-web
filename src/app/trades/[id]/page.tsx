@@ -110,7 +110,7 @@ export default function TradeDetailsPage() {
                             <CardTitle className="text-cyan-400">Phase 1: Trade Plan</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-6 text-slate-300">
-                            <div className="grid grid-cols-3 gap-4 bg-slate-950/50 p-4 rounded-lg border border-slate-800">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-slate-950/50 p-4 rounded-lg border border-slate-800">
                                 <div>
                                     <div className="text-xs text-slate-500 uppercase">Entry</div>
                                     <div className="font-mono text-lg">{trade.plannedEntry}</div>
@@ -122,6 +122,10 @@ export default function TradeDetailsPage() {
                                 <div>
                                     <div className="text-xs text-slate-500 uppercase">Target</div>
                                     <div className="font-mono text-lg text-green-400">{trade.plannedTP}</div>
+                                </div>
+                                <div>
+                                    <div className="text-xs text-slate-500 uppercase">Risk ($)</div>
+                                    <div className="font-mono text-lg text-amber-400">{trade.riskAmount ? `$${trade.riskAmount}` : '--'}</div>
                                 </div>
                             </div>
 

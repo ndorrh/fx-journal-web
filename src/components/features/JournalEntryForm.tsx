@@ -30,6 +30,7 @@ export function JournalEntryForm({ onSuccess }: JournalEntryFormProps) {
     const [plannedEntry, setPlannedEntry] = useState("")
     const [plannedSL, setPlannedSL] = useState("")
     const [plannedTP, setPlannedTP] = useState("")
+    const [riskAmount, setRiskAmount] = useState("")
     const [positionSize, setPositionSize] = useState("")
     const [entryReason, setEntryReason] = useState("")
 
@@ -87,6 +88,7 @@ export function JournalEntryForm({ onSuccess }: JournalEntryFormProps) {
                 plannedSL: parseFloat(plannedSL) || 0,
                 plannedTP: parseFloat(plannedTP) || 0,
                 plannedRR,
+                riskAmount: parseFloat(riskAmount) || 0,
                 positionSize: parseFloat(positionSize) || 0,
                 entryReason: entryReason || "Technical",
                 preTradeEmotion,
@@ -113,6 +115,7 @@ export function JournalEntryForm({ onSuccess }: JournalEntryFormProps) {
             setPlannedEntry("")
             setPlannedSL("")
             setPlannedTP("")
+            setRiskAmount("")
             setBeforeImageUrl("")
 
         } catch (error) {
@@ -256,9 +259,16 @@ export function JournalEntryForm({ onSuccess }: JournalEntryFormProps) {
                                         <div className="space-y-2">
                                             <div className="flex justify-between">
                                                 <label className="text-sm text-red-400/80">Stop Loss</label>
-                                                <span className="text-[10px] text-red-900/60">Risk</span>
+                                                <span className="text-[10px] text-red-900/60">Level</span>
                                             </div>
                                             <Input type="number" step="0.00001" placeholder="0.99800" className="h-12 text-lg font-mono bg-red-950/10 border-red-900/30 text-red-200 focus:border-red-500/50" value={plannedSL} onChange={(e) => setPlannedSL(e.target.value)} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between">
+                                                <label className="text-sm text-amber-400/80">Risk ($)</label>
+                                                <span className="text-[10px] text-amber-900/60">$$$</span>
+                                            </div>
+                                            <Input type="number" step="1" placeholder="50" className="h-12 text-lg font-mono bg-amber-950/10 border-amber-900/30 text-amber-200 focus:border-amber-500/50" value={riskAmount} onChange={(e) => setRiskAmount(e.target.value)} />
                                         </div>
                                         <div className="space-y-2">
                                             <div className="flex justify-between">

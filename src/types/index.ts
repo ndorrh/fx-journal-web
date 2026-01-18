@@ -20,6 +20,7 @@ export interface Trade {
     plannedSL: number;
     plannedTP: number;
     plannedRR: number;
+    riskAmount?: number; // Risk in currency (e.g., $50)
     positionSize: number;
     entryReason: string; // "Technical", "Fundamental"
     preTradeEmotion?: string; // "Calm", "Anxious" (optional at planning)
