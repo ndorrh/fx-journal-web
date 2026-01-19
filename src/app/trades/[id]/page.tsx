@@ -4,13 +4,18 @@ import { useEffect, useState, Suspense } from "react"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
 import { getTrade, updateTrade } from "@/lib/services/tradeService"
-import { convertGoogleDriveLink } from "@/lib/utils"
+import { convertGoogleDriveLink, cleanUndefined } from "@/lib/utils"
+
+// ... (existing imports)
+
 import { Trade } from "@/types"
 import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
 import { Select } from "@/components/ui/Select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
 import { ArrowLeft } from "lucide-react"
+import { AdminActingAsBanner } from "@/components/admin/AdminActingAsBanner"
+
 
 function TradeDetailsContent() {
     const { id } = useParams()
@@ -88,7 +93,7 @@ function TradeDetailsContent() {
         if (!user || !trade || !trade.id) return
         setSaving(true)
         try {
-            await updateTrade(user.uid, trade.id, {
+            const updateData = cleanUndefined({
                 status: "Closed",
                 exitPrice: parseFloat(exitPrice),
                 pnl: parseFloat(pnl),
@@ -99,6 +104,8 @@ function TradeDetailsContent() {
                 lessonsLearned,
                 afterImageUrl: convertGoogleDriveLink(afterImageUrl)
             })
+
+            await updateTrade(user.uid, trade.id, updateData)
             alert("Trade Updated & Closed!")
             router.push("/")
         } catch (e) {
@@ -113,12 +120,14 @@ function TradeDetailsContent() {
         if (!user || !trade || !trade.id) return
         setSaving(true)
         try {
-            await updateTrade(user.uid, trade.id, {
+            const updateData = cleanUndefined({
                 ...editPlan,
-                beforeImageUrl: editPlan.beforeImageUrl ? convertGoogleDriveLink(editPlan.beforeImageUrl) : undefined
+                beforeImageUrl: editPlan.beforeImageUrl ? convertGoogleDriveLink(editPlan.beforeImageUrl) : null
             })
+
+            await updateTrade(user.uid, trade.id, updateData)
             // Update local state
-            setTrade(prev => prev ? ({ ...prev, ...editPlan }) : null)
+            setTrade(prev => prev ? ({ ...prev, ...updateData }) : null)
             setIsEditingPlan(false)
             alert("Plan Updated!")
         } catch (e) {
@@ -142,6 +151,8 @@ function TradeDetailsContent() {
                         Back to Dashboard
                     </Button>
                 </div>
+
+                <AdminActingAsBanner targetUserId={effectiveUserId || ""} currentUserId={user?.uid} />
 
                 <div className="flex justify-between items-start">
                     <div>

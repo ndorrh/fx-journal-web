@@ -22,3 +22,7 @@ export function convertGoogleDriveLink(url: string): string {
 
   return url;
 }
+
+export function cleanUndefined(obj: any): any {
+  return JSON.parse(JSON.stringify(obj));
+}
