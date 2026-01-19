@@ -45,6 +45,7 @@ function TradeDetailsContent() {
     const [postTradeEmotion, setPostTradeEmotion] = useState("")
     const [lessonsLearned, setLessonsLearned] = useState("")
     const [afterImageUrl, setAfterImageUrl] = useState("")
+    const [error, setError] = useState("")
 
     // Phase 2 Extended Metrics
     const [maxAdverseExcursion, setMaxAdverseExcursion] = useState("")
@@ -138,13 +139,15 @@ function TradeDetailsContent() {
     const handleSaveExecution = async () => {
         if (!user || !trade || !trade.id) return
         setSaving(true)
+        setError("")
+
         try {
             // VALIDATION RULES
             // 1. Physics Rule: Actual RR cannot be greater than MFE
             const mfeVal = parseFloat(maxFavorableExcursion);
             const arrVal = parseFloat(actualRR);
             if (!isNaN(mfeVal) && !isNaN(arrVal) && arrVal > mfeVal) {
-                alert("Error: You can't bank more R than the price actually moved! (Actual R > MFE)");
+                setError("⛔ Physics Violation: You cannot bank more R (Actual RR) than the price moved (MFE).");
                 setSaving(false);
                 return;
             }
@@ -152,7 +155,7 @@ function TradeDetailsContent() {
             // 2. Outcome Rule: If Outcome is "Win", PnL must be positive
             const pnlVal = parseFloat(pnl);
             if (outcome === "Win" && !isNaN(pnlVal) && pnlVal <= 0) {
-                alert("Error: If Outcome is 'Win', PnL must be positive.");
+                setError("⛔ Logic Error: If Outcome is 'Win', PnL must be positive.");
                 setSaving(false);
                 return;
             }
@@ -197,7 +200,7 @@ function TradeDetailsContent() {
             router.push("/")
         } catch (e) {
             console.error(e)
-            alert("Failed to update trade")
+            setError("Failed to update trade. Please check your connection and try again.")
         } finally {
             setSaving(false)
         }
@@ -802,6 +805,12 @@ function TradeDetailsContent() {
                                 />
                             </div>
 
+                            {error && (
+                                <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-md flex items-center gap-2 animate-in slide-in-from-top-2">
+                                    <span className="text-xl">⚠️</span>
+                                    <span className="font-medium">{error}</span>
+                                </div>
+                            )}
                             <div className="space-y-2">
                                 <Tooltip content="Screenshot of the chart after the trade closed.">
                                     <label className="text-sm font-medium text-slate-300">Result Image URL (TradingView or Google Drive)</label>
