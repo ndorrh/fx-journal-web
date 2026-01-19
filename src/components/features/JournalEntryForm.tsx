@@ -104,6 +104,12 @@ export function JournalEntryForm({ onSuccess, targetUserId }: JournalEntryFormPr
         setLoading(true)
         setSuccessMsg("")
 
+        if (!beforeImageUrl) {
+            alert("Please upload a Setup Chart (Required)")
+            setLoading(false)
+            return
+        }
+
         try {
             const plannedRR = calculateRR()
 
@@ -442,7 +448,7 @@ export function JournalEntryForm({ onSuccess, targetUserId }: JournalEntryFormPr
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium text-slate-300">Chart URL (Optional)</label>
+                                        <label className="text-sm font-medium text-slate-300">Setup Chart (Required)</label>
                                         <ImageUploader
                                             value={beforeImageUrl}
                                             onChange={(url) => {
@@ -454,8 +460,27 @@ export function JournalEntryForm({ onSuccess, targetUserId }: JournalEntryFormPr
                                     </div>
 
                                     {beforeImageUrl && (
-                                        <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-slate-700 bg-black mt-4">
+                                        <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-slate-700 bg-black mt-2">
                                             <img src={beforeImageUrl} alt="Setup" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                        </div>
+                                    )}
+
+                                    <div className="space-y-2 pt-2">
+                                        <label className="text-sm font-medium text-slate-300">Confirmation / Trigger Chart (Optional)</label>
+                                        <div className="text-xs text-slate-500 mb-1">e.g. Lower timeframe entry trigger</div>
+                                        <ImageUploader
+                                            value={confirmationImageUrl}
+                                            onChange={(url) => {
+                                                const converted = convertGoogleDriveLink(url);
+                                                setConfirmationImageUrl(converted);
+                                            }}
+                                            placeholder="LTF Trigger, Verification, etc."
+                                        />
+                                    </div>
+
+                                    {confirmationImageUrl && (
+                                        <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-slate-700 bg-black mt-2">
+                                            <img src={confirmationImageUrl} alt="Confirmation" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                                         </div>
                                     )}
 

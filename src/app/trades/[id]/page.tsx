@@ -307,6 +307,15 @@ function TradeDetailsContent() {
                                                 </div>
                                             </div>
                                         )}
+
+                                        {trade.confirmationImageUrl && (
+                                            <div>
+                                                <label className="text-xs text-slate-500 uppercase block mb-1">Trigger / Confirmation Chart</label>
+                                                <div className="rounded-lg overflow-hidden border border-slate-700">
+                                                    <img src={trade.confirmationImageUrl} alt="Confirmation" className="w-full h-auto object-cover hover:scale-105 transition-transform duration-500 cursor-pointer" onClick={() => window.open(trade.confirmationImageUrl, '_blank')} referrerPolicy="no-referrer" />
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </>
                             ) : (
@@ -400,28 +409,54 @@ function TradeDetailsContent() {
                                         </div>
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <label className="text-xs text-slate-500 uppercase">Chart URL</label>
-                                        <ImageUploader
-                                            value={editPlan.beforeImageUrl || ""}
-                                            onChange={(url) => {
-                                                const converted = convertGoogleDriveLink(url);
-                                                setEditPlan({ ...editPlan, beforeImageUrl: converted });
-                                            }}
-                                            placeholder="https://..."
-                                            initialValue={trade.beforeImageUrl}
-                                        />
-                                        {editPlan.beforeImageUrl && (
-                                            <div className="relative w-full h-32 rounded-lg overflow-hidden border border-slate-700 mt-2">
-                                                <img
-                                                    src={editPlan.beforeImageUrl}
-                                                    alt="Plan Preview"
-                                                    className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform"
-                                                    referrerPolicy="no-referrer"
-                                                    onClick={() => window.open(editPlan.beforeImageUrl, '_blank')}
-                                                />
-                                            </div>
-                                        )}
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <label className="text-xs text-slate-500 uppercase">Setup Chart (Required)</label>
+                                            <ImageUploader
+                                                value={editPlan.beforeImageUrl || ""}
+                                                onChange={(url) => {
+                                                    const converted = convertGoogleDriveLink(url);
+                                                    setEditPlan({ ...editPlan, beforeImageUrl: converted });
+                                                }}
+                                                placeholder="https://..."
+                                                initialValue={trade.beforeImageUrl}
+                                            />
+                                            {editPlan.beforeImageUrl && (
+                                                <div className="relative w-full h-32 rounded-lg overflow-hidden border border-slate-700 mt-2">
+                                                    <img
+                                                        src={editPlan.beforeImageUrl}
+                                                        alt="Plan Preview"
+                                                        className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform"
+                                                        referrerPolicy="no-referrer"
+                                                        onClick={() => window.open(editPlan.beforeImageUrl, '_blank')}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-xs text-slate-500 uppercase">Confirmation Chart (Optional)</label>
+                                            <ImageUploader
+                                                value={editPlan.confirmationImageUrl || ""}
+                                                onChange={(url) => {
+                                                    const converted = convertGoogleDriveLink(url);
+                                                    setEditPlan({ ...editPlan, confirmationImageUrl: converted });
+                                                }}
+                                                placeholder="https://..."
+                                                initialValue={trade.confirmationImageUrl}
+                                            />
+                                            {editPlan.confirmationImageUrl && (
+                                                <div className="relative w-full h-32 rounded-lg overflow-hidden border border-slate-700 mt-2">
+                                                    <img
+                                                        src={editPlan.confirmationImageUrl}
+                                                        alt="Confirmation Preview"
+                                                        className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform"
+                                                        referrerPolicy="no-referrer"
+                                                        onClick={() => window.open(editPlan.confirmationImageUrl, '_blank')}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <div className="space-y-2">
