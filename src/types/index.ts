@@ -46,7 +46,18 @@ export interface Trade {
     outcome?: "Win" | "Loss" | "BE" | "Open"; // Result
     exitReason?: string;
     postTradeEmotion?: string;
-    lessonsLearned?: string;
+    lessonsLearned?: string; // "Don't chase candles"
+
+    // --- Phase 2 Extended Metrics ---
+    maxAdverseExcursion?: number; // MAE (Drawdown in R)
+    maxFavorableExcursion?: number; // MFE (Peak Profit in R)
+    closedReason?: string; // Specific reason for closing (e.g. "Stalled at 4R")
+
+    // --- Phase 1 Extended Metrics ---
+    sleepScore?: number; // 1-10
+    zoneCreationTime?: number; // Timestamp
+    entryTime?: number; // Est. Entry Timestamp
+    timeToEntry?: number; // Minutes between Zone Creation and Entry
 
     // --- Metadata & Analysis ---
     session: string;

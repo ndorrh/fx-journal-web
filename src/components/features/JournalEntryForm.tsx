@@ -47,6 +47,10 @@ export function JournalEntryForm({ onSuccess, targetUserId }: JournalEntryFormPr
 
     // --- Psychology & Notes ---
     const [preTradeEmotion, setPreTradeEmotion] = useState("")
+    const [sleepScore, setSleepScore] = useState("")
+    const [zoneCreationTime, setZoneCreationTime] = useState("")
+    const [entryTime, setEntryTime] = useState("")
+
     const [notes, setNotes] = useState("")
     const [tags, setTags] = useState("")
     const [beforeImageUrl, setBeforeImageUrl] = useState("")
@@ -64,6 +68,11 @@ export function JournalEntryForm({ onSuccess, targetUserId }: JournalEntryFormPr
         if (risk === 0) return 0
         return parseFloat((reward / risk).toFixed(2))
     }
+
+    const timeToEntryDisplay = (zoneCreationTime && entryTime)
+        ? ((new Date(entryTime).getTime() - new Date(zoneCreationTime).getTime()) / 60000).toFixed(1)
+        : null
+
 
     const deleteImage = async (url: string) => {
         if (!url || url.includes('drive.google.com') || url.includes('tradingview.com')) return;
@@ -140,6 +149,14 @@ export function JournalEntryForm({ onSuccess, targetUserId }: JournalEntryFormPr
                 positionSize: parseFloat(positionSize) || 0,
                 entryReason: entryReason || "Technical",
                 preTradeEmotion,
+                sleepScore: sleepScore ? parseInt(sleepScore) : undefined,
+
+                // Timing Metrics
+                zoneCreationTime: zoneCreationTime ? new Date(zoneCreationTime).getTime() : undefined,
+                entryTime: entryTime ? new Date(entryTime).getTime() : undefined,
+                timeToEntry: (zoneCreationTime && entryTime)
+                    ? parseFloat(((new Date(entryTime).getTime() - new Date(zoneCreationTime).getTime()) / 60000).toFixed(1))
+                    : undefined,
 
                 // Metadata
                 session,
@@ -474,6 +491,44 @@ export function JournalEntryForm({ onSuccess, targetUserId }: JournalEntryFormPr
                                             <option value="Greedy">🤑 Greedy</option>
                                         </Select>
                                     </div>
+
+                                    {/* EXTENDED METRICS: Sleep & Timing */}
+                                    <div className="grid grid-cols-2 gap-4 pt-2">
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-semibold text-slate-400 uppercase">Sleep Score (1-10)</label>
+                                            <Select value={sleepScore} onChange={(e) => setSleepScore(e.target.value)} className="h-9 text-sm">
+                                                <option value="">Rate Sleep...</option>
+                                                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+                                                    <option key={num} value={num}>{num} {num <= 3 ? '😴' : num >= 8 ? '⚡' : ''}</option>
+                                                ))}
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-semibold text-slate-400 uppercase">Est. Entry Time</label>
+                                            <input
+                                                type="datetime-local"
+                                                className="w-full bg-slate-900 border border-slate-700 rounded h-9 px-2 text-xs text-slate-200"
+                                                value={entryTime}
+                                                onChange={(e) => setEntryTime(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-semibold text-slate-400 uppercase">Zone Created At</label>
+                                        <input
+                                            type="datetime-local"
+                                            className="w-full bg-slate-900 border border-slate-700 rounded h-9 px-2 text-xs text-slate-200"
+                                            value={zoneCreationTime}
+                                            onChange={(e) => setZoneCreationTime(e.target.value)}
+                                        />
+                                        {timeToEntryDisplay && (
+                                            <div className="text-[10px] text-cyan-400 font-mono text-right mt-1">
+                                                Time to Entry: {timeToEntryDisplay} mins
+                                            </div>
+                                        )}
+                                    </div>
+
 
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium text-slate-300">Setup Chart (Required)</label>

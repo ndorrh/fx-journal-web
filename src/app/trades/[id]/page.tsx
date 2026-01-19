@@ -39,11 +39,16 @@ function TradeDetailsContent() {
     const [exitPrice, setExitPrice] = useState("")
     const [outcome, setOutcome] = useState<"Win" | "Loss" | "BE">("Win")
     const [pnl, setPnl] = useState("")
-    const [actualRR, setActualRR] = useState("") // Calculated or manual? Let's allow manual for now or auto-calc
+    const [actualRR, setActualRR] = useState("")
     const [exitReason, setExitReason] = useState("")
     const [postTradeEmotion, setPostTradeEmotion] = useState("")
     const [lessonsLearned, setLessonsLearned] = useState("")
     const [afterImageUrl, setAfterImageUrl] = useState("")
+
+    // Phase 2 Extended Metrics
+    const [maxAdverseExcursion, setMaxAdverseExcursion] = useState("")
+    const [maxFavorableExcursion, setMaxFavorableExcursion] = useState("")
+    const [closedReason, setClosedReason] = useState("")
 
     useEffect(() => {
         if (effectiveUserId && id) {
@@ -53,13 +58,18 @@ function TradeDetailsContent() {
                     if (t) {
                         // Pre-fill execution data if exists
                         setExitPrice(t.exitPrice?.toString() || "")
-                        setOutcome(t.outcome === "Open" ? "Win" : t.outcome || "Win") // Default to Win if currently Open/Planned
+                        setOutcome(t.outcome === "Open" ? "Win" : t.outcome || "Win")
                         setPnl(t.pnl?.toString() || "")
                         setActualRR(t.actualRR?.toString() || "")
                         setExitReason(t.exitReason || "")
                         setPostTradeEmotion(t.postTradeEmotion || "")
                         setLessonsLearned(t.lessonsLearned || "")
                         setAfterImageUrl(t.afterImageUrl || "")
+
+                        // Extended Metrics
+                        setMaxAdverseExcursion(t.maxAdverseExcursion?.toString() || "")
+                        setMaxFavorableExcursion(t.maxFavorableExcursion?.toString() || "")
+                        setClosedReason(t.closedReason || "")
 
                         // Initialize Edit Form
                         setEditPlan({
@@ -83,7 +93,11 @@ function TradeDetailsContent() {
                             zoneType: t.zoneType,
                             confirmation: t.confirmation,
                             pdArray: t.pdArray,
-                            liquidityTarget: t.liquidityTarget
+                            liquidityTarget: t.liquidityTarget,
+                            // Extended Metrics (Phase 1)
+                            sleepScore: t.sleepScore,
+                            zoneCreationTime: t.zoneCreationTime,
+                            entryTime: t.entryTime
                         })
                     }
                 })
@@ -133,6 +147,10 @@ function TradeDetailsContent() {
                 exitReason,
                 postTradeEmotion,
                 lessonsLearned,
+                // Extended Metrics
+                maxAdverseExcursion: parseFloat(maxAdverseExcursion),
+                maxFavorableExcursion: parseFloat(maxFavorableExcursion),
+                closedReason,
                 // Promote only if temp
                 afterImageUrl: afterImageUrl.includes('/temp/') ? await promoteImage(convertGoogleDriveLink(afterImageUrl)) : convertGoogleDriveLink(afterImageUrl)
             })
@@ -180,6 +198,10 @@ function TradeDetailsContent() {
 
             const updateData = cleanUndefined({
                 ...editPlan,
+                // Recalculate Time To Entry if changed
+                timeToEntry: (editPlan.zoneCreationTime && editPlan.entryTime)
+                    ? parseFloat(((new Date(editPlan.entryTime).getTime() - new Date(editPlan.zoneCreationTime).getTime()) / 60000).toFixed(1))
+                    : undefined,
                 beforeImageUrl: finalBeforeImageUrl,
                 confirmationImageUrl: finalConfirmationImageUrl
             })
@@ -288,6 +310,30 @@ function TradeDetailsContent() {
                                             <div className="font-mono text-lg text-amber-400">{trade.riskAmount ? `$${trade.riskAmount}` : '--'}</div>
                                         </div>
                                     </div>
+
+                                    {/* Extended Metrics Display (Read Only) */}
+                                    {(trade.sleepScore || trade.timeToEntry) && (
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-lg border border-slate-800 bg-slate-900/40">
+                                            {trade.sleepScore && (
+                                                <div>
+                                                    <div className="text-xs text-slate-500 uppercase">Sleep Score</div>
+                                                    <div className="font-mono text-lg text-blue-300">{trade.sleepScore}/10</div>
+                                                </div>
+                                            )}
+                                            {trade.timeToEntry && (
+                                                <div>
+                                                    <div className="text-xs text-slate-500 uppercase">Time To Entry</div>
+                                                    <div className="font-mono text-lg text-cyan-300">{trade.timeToEntry}m</div>
+                                                </div>
+                                            )}
+                                            {trade.zoneCreationTime && (
+                                                <div className="col-span-2">
+                                                    <div className="text-xs text-slate-500 uppercase">Zone Found At</div>
+                                                    <div className="text-sm text-slate-400">{new Date(trade.zoneCreationTime).toLocaleString()}</div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
 
                                     <div className="space-y-4">
                                         <div>
@@ -462,6 +508,42 @@ function TradeDetailsContent() {
                                         </div>
                                     </div>
 
+
+                                    {/* --- Extended Metrics (Sleep & Time) --- */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-800/50 pt-4">
+                                        <div className="space-y-2 sm:col-span-2">
+                                            <label className="text-xs text-slate-500 uppercase">Sleep Score</label>
+                                            <Select
+                                                value={editPlan.sleepScore || ""}
+                                                onChange={e => setEditPlan({ ...editPlan, sleepScore: parseInt(e.target.value) })}
+                                                className="bg-slate-950"
+                                            >
+                                                <option value="">Rate...</option>
+                                                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+                                                    <option key={num} value={num}>{num}</option>
+                                                ))}
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs text-slate-500 uppercase">Zone Created</label>
+                                            <input
+                                                type="datetime-local"
+                                                value={editPlan.zoneCreationTime ? new Date(editPlan.zoneCreationTime).toISOString().slice(0, 16) : ""}
+                                                onChange={(e) => setEditPlan({ ...editPlan, zoneCreationTime: new Date(e.target.value).getTime() })}
+                                                className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs text-slate-500 uppercase">Est. Entry</label>
+                                            <input
+                                                type="datetime-local"
+                                                value={editPlan.entryTime ? new Date(editPlan.entryTime).toISOString().slice(0, 16) : ""}
+                                                onChange={(e) => setEditPlan({ ...editPlan, entryTime: new Date(e.target.value).getTime() })}
+                                                className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                                            />
+                                        </div>
+                                    </div>
+
                                     <div className="space-y-4">
                                         <div className="space-y-2">
                                             <label className="text-xs text-slate-500 uppercase">Setup Chart (Required)</label>
@@ -578,6 +660,40 @@ function TradeDetailsContent() {
                                         onChange={(e) => setActualRR(e.target.value)}
                                     />
                                 </div>
+                            </div>
+
+                            {/* MAE / MFE */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-slate-300">MAE (Drawdown R)</label>
+                                    <Input
+                                        type="number" step="0.1"
+                                        className="bg-slate-950/50 border-red-900/30 focus:border-red-500 placeholder-red-900/50"
+                                        placeholder="e.g. -0.5"
+                                        value={maxAdverseExcursion}
+                                        onChange={(e) => setMaxAdverseExcursion(e.target.value)}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-slate-300">MFE (Peak R)</label>
+                                    <Input
+                                        type="number" step="0.1"
+                                        className="bg-slate-950/50 border-green-900/30 focus:border-green-500 placeholder-green-900/50"
+                                        placeholder="e.g. +3.2"
+                                        value={maxFavorableExcursion}
+                                        onChange={(e) => setMaxFavorableExcursion(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-300">Detailed Closing Reason</label>
+                                <Input
+                                    className="bg-slate-950/50 border-slate-800 focus:border-purple-500"
+                                    placeholder="Specific reason for closing..."
+                                    value={closedReason}
+                                    onChange={(e) => setClosedReason(e.target.value)}
+                                />
                             </div>
 
                             <div className="space-y-2">
