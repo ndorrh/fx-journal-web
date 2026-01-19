@@ -9,9 +9,10 @@ interface ImageUploaderProps {
     value: string;
     onChange: (url: string) => void;
     placeholder?: string;
+    initialValue?: string;
 }
 
-export function ImageUploader({ value, onChange, placeholder = "Image URL or Upload" }: ImageUploaderProps) {
+export function ImageUploader({ value, onChange, placeholder = "Image URL or Upload", initialValue }: ImageUploaderProps) {
     const [mode, setMode] = useState<'upload' | 'link'>('upload');
     const [uploading, setUploading] = useState(false);
     const [dragActive, setDragActive] = useState(false);
@@ -28,6 +29,10 @@ export function ImageUploader({ value, onChange, placeholder = "Image URL or Upl
     };
 
     const deleteOldImage = async (url: string) => {
+        // SAFETY: Never auto-delete the initial (saved) image from the uploader.
+        // That should only happen on explicit Form Save.
+        if (initialValue && url === initialValue) return;
+
         // Only delete if it's an R2 URL (contains setups/ or similar, and not google/tradingview)
         if (!url || url.includes('drive.google.com') || url.includes('tradingview.com')) return;
 

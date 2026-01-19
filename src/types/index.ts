@@ -64,5 +64,6 @@ export interface Trade {
 
     // Media
     beforeImageUrl?: string;
+    confirmationImageUrl?: string;
     afterImageUrl?: string;
 }

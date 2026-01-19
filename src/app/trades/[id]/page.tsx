@@ -78,6 +78,7 @@ function TradeDetailsContent() {
                             preTradeEmotion: t.preTradeEmotion,
                             notes: t.notes,
                             beforeImageUrl: t.beforeImageUrl,
+                            confirmationImageUrl: t.confirmationImageUrl,
                             // Strategy specifics
                             zoneType: t.zoneType,
                             confirmation: t.confirmation,
@@ -89,6 +90,35 @@ function TradeDetailsContent() {
                 .finally(() => setLoading(false))
         }
     }, [effectiveUserId, id])
+
+    const deleteImage = async (url: string) => {
+        if (!url || url.includes('drive.google.com') || url.includes('tradingview.com')) return;
+        try {
+            const urlObj = new URL(url);
+            const key = urlObj.pathname.startsWith('/') ? urlObj.pathname.slice(1) : urlObj.pathname;
+            await fetch(`/api/upload?key=${encodeURIComponent(key)}`, { method: 'DELETE' });
+        } catch (e) {
+            console.error("Failed to delete image:", e);
+        }
+    };
+
+    const promoteImage = async (url: string) => {
+        if (!url || !url.includes('/temp/')) return url;
+        try {
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url })
+            });
+            const data = await res.json();
+            if (data.success && data.publicUrl) {
+                return data.publicUrl;
+            }
+        } catch (e) {
+            console.error("Failed to promote image:", e);
+        }
+        return url;
+    };
 
     const handleSaveExecution = async () => {
         if (!user || !trade || !trade.id) return
@@ -103,10 +133,29 @@ function TradeDetailsContent() {
                 exitReason,
                 postTradeEmotion,
                 lessonsLearned,
-                afterImageUrl: convertGoogleDriveLink(afterImageUrl)
+                // Promote only if temp
+                afterImageUrl: afterImageUrl.includes('/temp/') ? await promoteImage(convertGoogleDriveLink(afterImageUrl)) : convertGoogleDriveLink(afterImageUrl)
             })
 
-            await updateTrade(user.uid, trade.id, updateData)
+            // Use trade.userId (owner) instead of user.uid (current user) to ensure Admin updates target the right path
+            const targetUserId = trade.userId || user.uid;
+
+            try {
+                await updateTrade(targetUserId, trade.id, updateData)
+            } catch (dbError) {
+                // ROLLBACK
+                console.error("DB Update failed, rolling back image...", dbError);
+                if (updateData.afterImageUrl && updateData.afterImageUrl !== afterImageUrl && updateData.afterImageUrl.includes('/setups/')) {
+                    await deleteImage(updateData.afterImageUrl);
+                }
+                throw dbError;
+            }
+
+            // CLEANUP: If we successfully saved a NEW image, delete the OLD saved image if it differs
+            if (trade.afterImageUrl && trade.afterImageUrl !== afterImageUrl) {
+                await deleteImage(trade.afterImageUrl);
+            }
+
             alert("Trade Updated & Closed!")
             router.push("/")
         } catch (e) {
@@ -121,12 +170,45 @@ function TradeDetailsContent() {
         if (!user || !trade || !trade.id) return
         setSaving(true)
         try {
+            const finalBeforeImageUrl = (editPlan.beforeImageUrl && editPlan.beforeImageUrl.includes('/temp/'))
+                ? await promoteImage(convertGoogleDriveLink(editPlan.beforeImageUrl))
+                : (editPlan.beforeImageUrl ? convertGoogleDriveLink(editPlan.beforeImageUrl) : null);
+
+            const finalConfirmationImageUrl = (editPlan.confirmationImageUrl && editPlan.confirmationImageUrl.includes('/temp/'))
+                ? await promoteImage(convertGoogleDriveLink(editPlan.confirmationImageUrl))
+                : (editPlan.confirmationImageUrl ? convertGoogleDriveLink(editPlan.confirmationImageUrl) : null);
+
             const updateData = cleanUndefined({
                 ...editPlan,
-                beforeImageUrl: editPlan.beforeImageUrl ? convertGoogleDriveLink(editPlan.beforeImageUrl) : null
+                beforeImageUrl: finalBeforeImageUrl,
+                confirmationImageUrl: finalConfirmationImageUrl
             })
 
-            await updateTrade(user.uid, trade.id, updateData)
+            // Use trade.userId (owner) instead of user.uid (current user)
+            const targetUserId = trade.userId || user.uid;
+
+            try {
+                await updateTrade(targetUserId, trade.id, updateData)
+            } catch (dbError) {
+                // ROLLBACK
+                console.error("DB Update failed (Plan), rolling back images...", dbError);
+                if (finalBeforeImageUrl && finalBeforeImageUrl !== editPlan.beforeImageUrl && finalBeforeImageUrl.includes('/setups/')) {
+                    await deleteImage(finalBeforeImageUrl);
+                }
+                if (finalConfirmationImageUrl && finalConfirmationImageUrl !== editPlan.confirmationImageUrl && finalConfirmationImageUrl.includes('/setups/')) {
+                    await deleteImage(finalConfirmationImageUrl);
+                }
+                throw dbError;
+            }
+
+            // CLEANUP: If we successfully saved a NEW image, delete the OLD saved image if it differs
+            if (trade.beforeImageUrl && trade.beforeImageUrl !== editPlan.beforeImageUrl) {
+                await deleteImage(trade.beforeImageUrl);
+            }
+            if (trade.confirmationImageUrl && trade.confirmationImageUrl !== editPlan.confirmationImageUrl) {
+                await deleteImage(trade.confirmationImageUrl);
+            }
+
             // Update local state
             setTrade(prev => prev ? ({ ...prev, ...updateData }) : null)
             setIsEditingPlan(false)
@@ -327,6 +409,7 @@ function TradeDetailsContent() {
                                                 setEditPlan({ ...editPlan, beforeImageUrl: converted });
                                             }}
                                             placeholder="https://..."
+                                            initialValue={trade.beforeImageUrl}
                                         />
                                         {editPlan.beforeImageUrl && (
                                             <div className="relative w-full h-32 rounded-lg overflow-hidden border border-slate-700 mt-2">
@@ -438,6 +521,7 @@ function TradeDetailsContent() {
                                         setAfterImageUrl(converted);
                                     }}
                                     placeholder="https://... or Upload"
+                                    initialValue={trade.afterImageUrl}
                                 />
                                 {afterImageUrl && (
                                     <div className="relative w-full h-32 rounded-lg overflow-hidden border border-slate-700 mt-2">

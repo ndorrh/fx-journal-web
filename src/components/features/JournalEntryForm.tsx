@@ -50,6 +50,7 @@ export function JournalEntryForm({ onSuccess, targetUserId }: JournalEntryFormPr
     const [notes, setNotes] = useState("")
     const [tags, setTags] = useState("")
     const [beforeImageUrl, setBeforeImageUrl] = useState("")
+    const [confirmationImageUrl, setConfirmationImageUrl] = useState("")
 
     // Helper: Calculate Planned RR
     const calculateRR = () => {
@@ -64,6 +65,35 @@ export function JournalEntryForm({ onSuccess, targetUserId }: JournalEntryFormPr
         return parseFloat((reward / risk).toFixed(2))
     }
 
+    const deleteImage = async (url: string) => {
+        if (!url || url.includes('drive.google.com') || url.includes('tradingview.com')) return;
+        try {
+            const urlObj = new URL(url);
+            const key = urlObj.pathname.startsWith('/') ? urlObj.pathname.slice(1) : urlObj.pathname;
+            await fetch(`/api/upload?key=${encodeURIComponent(key)}`, { method: 'DELETE' });
+        } catch (e) {
+            console.error("Failed to delete image:", e);
+        }
+    };
+
+    const promoteImage = async (url: string) => {
+        if (!url || !url.includes('/temp/')) return url;
+        try {
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url })
+            });
+            const data = await res.json();
+            if (data.success && data.publicUrl) {
+                return data.publicUrl;
+            }
+        } catch (e) {
+            console.error("Failed to promote image:", e);
+        }
+        return url;
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!user) {
@@ -76,7 +106,11 @@ export function JournalEntryForm({ onSuccess, targetUserId }: JournalEntryFormPr
 
         try {
             const plannedRR = calculateRR()
-            const finalBeforeImageUrl = convertGoogleDriveLink(beforeImageUrl);
+
+            // PROMOTE IMAGES (Temp -> Setups)
+            // We only promote if they are temp, otherwise keep existing
+            const finalBeforeImageUrl = beforeImageUrl.includes('/temp/') ? await promoteImage(convertGoogleDriveLink(beforeImageUrl)) : convertGoogleDriveLink(beforeImageUrl);
+            const finalConfirmationImageUrl = confirmationImageUrl.includes('/temp/') ? await promoteImage(convertGoogleDriveLink(confirmationImageUrl)) : convertGoogleDriveLink(confirmationImageUrl);
 
             // Use target user ID if provided (Admin "Act As"), otherwise use logged-in user
             const finalUserId = targetUserId || user.uid
@@ -106,6 +140,7 @@ export function JournalEntryForm({ onSuccess, targetUserId }: JournalEntryFormPr
                 notes,
                 tags: tags.split(",").map(t => t.trim()).filter(Boolean),
                 beforeImageUrl: finalBeforeImageUrl,
+                confirmationImageUrl: finalConfirmationImageUrl,
 
                 // Conditional fields
                 zoneType: strategy === "SupplyDemand" ? zoneType : undefined,
@@ -114,19 +149,32 @@ export function JournalEntryForm({ onSuccess, targetUserId }: JournalEntryFormPr
                 liquidityTarget: strategy === "ICT" ? liquidityTarget : undefined,
             }
 
-            await addTrade(cleanUndefined(tradeData))
+            try {
+                await addTrade(cleanUndefined(tradeData))
+                setSuccessMsg("Trade Plan Saved! Good luck.")
+                setTimeout(() => setSuccessMsg(""), 3000)
+                if (onSuccess) onSuccess()
 
-            setSuccessMsg("Trade Plan Saved! Good luck.")
-            setTimeout(() => setSuccessMsg(""), 3000)
-            if (onSuccess) onSuccess()
+                // Reset crucial fields only
+                setNotes("")
+                setPlannedEntry("")
+                setPlannedSL("")
+                setPlannedTP("")
+                setRiskAmount("")
+                setBeforeImageUrl("")
+                setConfirmationImageUrl("")
+            } catch (saveError) {
+                // ROLLBACK: If DB save failed but we promoted images, delete them from setups/
+                console.error("DB Save failed, rolling back images...", saveError);
 
-            // Reset crucial fields only
-            setNotes("")
-            setPlannedEntry("")
-            setPlannedSL("")
-            setPlannedTP("")
-            setRiskAmount("")
-            setBeforeImageUrl("")
+                if (finalBeforeImageUrl && finalBeforeImageUrl !== beforeImageUrl && finalBeforeImageUrl.includes('/setups/')) {
+                    await deleteImage(finalBeforeImageUrl);
+                }
+                if (finalConfirmationImageUrl && finalConfirmationImageUrl !== confirmationImageUrl && finalConfirmationImageUrl.includes('/setups/')) {
+                    await deleteImage(finalConfirmationImageUrl);
+                }
+                throw saveError;
+            }
 
         } catch (error) {
             console.error("Error logging trade:", error)
