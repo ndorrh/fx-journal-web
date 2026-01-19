@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useAuth } from "@/context/AuthContext"
 import { getTrades } from "@/lib/services/tradeService"
 import { Trade } from "@/types"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
 import { ArrowLeft, ArrowUpRight, Search, Filter } from "lucide-react"
 import { Input } from "@/components/ui/Input"
@@ -17,14 +17,18 @@ export default function HistoryPage() {
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState("")
 
+    const searchParams = useSearchParams()
+    const viewAsUserId = searchParams?.get('userId')
+    const effectiveUserId = viewAsUserId || user?.uid
+
     useEffect(() => {
-        if (user) {
-            getTrades(user.uid).then(data => {
+        if (effectiveUserId) {
+            getTrades(effectiveUserId).then(data => {
                 setTrades(data.sort((a, b) => b.date - a.date))
                 setLoading(false)
             })
         }
-    }, [user])
+    }, [effectiveUserId])
 
     const filteredTrades = trades.filter(t =>
         t.instrument.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -86,7 +90,7 @@ export default function HistoryPage() {
                                         <tr
                                             key={trade.id}
                                             className="hover:bg-slate-800/50 transition-colors cursor-pointer group"
-                                            onClick={() => router.push(`/trades/${trade.id}`)}
+                                            onClick={() => router.push(`/trades/${trade.id}${viewAsUserId ? `?userId=${viewAsUserId}` : ''}`)}
                                         >
                                             <td className="px-6 py-4 font-medium text-slate-300">
                                                 {new Date(trade.date).toLocaleDateString()}
@@ -109,8 +113,8 @@ export default function HistoryPage() {
                                             </td>
                                             <td className="px-6 py-4 text-center">
                                                 <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${trade.status === 'Open' ? 'text-blue-400 bg-blue-950/30 border-blue-900' :
-                                                        trade.status === 'Closed' ? 'text-purple-400 bg-purple-950/30 border-purple-900' :
-                                                            'text-amber-400 bg-amber-950/30 border-amber-900'
+                                                    trade.status === 'Closed' ? 'text-purple-400 bg-purple-950/30 border-purple-900' :
+                                                        'text-amber-400 bg-amber-950/30 border-amber-900'
                                                     }`}>
                                                     {trade.status}
                                                 </span>

@@ -11,6 +11,8 @@ import { cn } from "@/lib/utils"
 
 import { LandingPage } from "@/components/features/LandingPage"
 
+import { useSearchParams } from "next/navigation"
+
 export default function Home() {
   const { user } = useAuth()
   const [activeTab, setActiveTab] = useState("Daily")
@@ -18,15 +20,20 @@ export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [loading, setLoading] = useState(false)
 
+  // Load params to check for impersonation
+  const searchParams = useSearchParams()
+  const viewAsUserId = searchParams?.get('userId')
+  const effectiveUserId = viewAsUserId || user?.uid
+
   // Load Data
   const loadTrades = async () => {
-    if (!user) {
+    if (!effectiveUserId) {
       setTrades([])
       return
     }
     try {
       setLoading(true)
-      const data = await getTrades(user.uid)
+      const data = await getTrades(effectiveUserId)
       setTrades(data)
     } catch (error) {
       console.error("Failed to load trades", error)
@@ -37,7 +44,7 @@ export default function Home() {
 
   useEffect(() => {
     loadTrades()
-  }, [user])
+  }, [effectiveUserId])
 
   if (!user) {
     return <LandingPage />

@@ -23,9 +23,42 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
             setUser(user);
             setLoading(false);
+
+            if (user) {
+                // Persist user data to Firestore
+                try {
+                    const { doc, setDoc, getDoc, serverTimestamp } = await import("firebase/firestore");
+                    const { db } = await import("@/lib/firebase");
+
+                    const userRef = doc(db, "users", user.uid);
+                    const userSnap = await getDoc(userRef);
+
+                    if (!userSnap.exists()) {
+                        await setDoc(userRef, {
+                            uid: user.uid,
+                            email: user.email,
+                            displayName: user.displayName,
+                            photoURL: user.photoURL,
+                            role: "user", // Default role
+                            createdAt: serverTimestamp(),
+                            lastLogin: serverTimestamp()
+                        });
+                    } else {
+                        // Update last login
+                        await setDoc(userRef, {
+                            lastLogin: serverTimestamp(),
+                            email: user.email, // Sync these in case they changed
+                            displayName: user.displayName,
+                            photoURL: user.photoURL
+                        }, { merge: true });
+                    }
+                } catch (error) {
+                    console.error("Error persisting user data:", error);
+                }
+            }
         });
         return () => unsubscribe();
     }, []);

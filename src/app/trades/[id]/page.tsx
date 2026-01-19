@@ -1,9 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
 import { getTrade, updateTrade } from "@/lib/services/tradeService"
+import { convertGoogleDriveLink } from "@/lib/utils"
 import { Trade } from "@/types"
 import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
@@ -20,6 +21,10 @@ export default function TradeDetailsPage() {
 
     const [saving, setSaving] = useState(false)
 
+    const searchParams = useSearchParams()
+    const viewAsUserId = searchParams?.get('userId')
+    const effectiveUserId = viewAsUserId || user?.uid
+
     // Editing State (Phase 1)
     const [isEditingPlan, setIsEditingPlan] = useState(false)
     const [editPlan, setEditPlan] = useState<Partial<Trade>>({})
@@ -35,8 +40,8 @@ export default function TradeDetailsPage() {
     const [afterImageUrl, setAfterImageUrl] = useState("")
 
     useEffect(() => {
-        if (user && id) {
-            getTrade(user.uid, id as string)
+        if (effectiveUserId && id) {
+            getTrade(effectiveUserId, id as string)
                 .then(t => {
                     setTrade(t)
                     if (t) {
@@ -78,7 +83,7 @@ export default function TradeDetailsPage() {
                 })
                 .finally(() => setLoading(false))
         }
-    }, [user, id])
+    }, [effectiveUserId, id])
 
     const handleSaveExecution = async () => {
         if (!user || !trade || !trade.id) return
@@ -93,7 +98,7 @@ export default function TradeDetailsPage() {
                 exitReason,
                 postTradeEmotion,
                 lessonsLearned,
-                afterImageUrl
+                afterImageUrl: convertGoogleDriveLink(afterImageUrl)
             })
             alert("Trade Updated & Closed!")
             router.push("/")
@@ -110,7 +115,8 @@ export default function TradeDetailsPage() {
         setSaving(true)
         try {
             await updateTrade(user.uid, trade.id, {
-                ...editPlan
+                ...editPlan,
+                beforeImageUrl: editPlan.beforeImageUrl ? convertGoogleDriveLink(editPlan.beforeImageUrl) : undefined
             })
             // Update local state
             setTrade(prev => prev ? ({ ...prev, ...editPlan }) : null)

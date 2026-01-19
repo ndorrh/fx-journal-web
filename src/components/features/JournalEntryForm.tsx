@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
 import { Select } from "@/components/ui/Select"
@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
 import { useAuth } from "@/context/AuthContext"
 import { addTrade } from "@/lib/services/tradeService"
 import { Trade, StrategyType } from "@/types"
+import { convertGoogleDriveLink } from "@/lib/utils"
 
 interface JournalEntryFormProps {
     onSuccess?: () => void
@@ -72,6 +73,7 @@ export function JournalEntryForm({ onSuccess }: JournalEntryFormProps) {
 
         try {
             const plannedRR = calculateRR()
+            const finalBeforeImageUrl = convertGoogleDriveLink(beforeImageUrl);
 
             const tradeData: Omit<Trade, "id" | "createdAt"> = {
                 userId: user.uid,
@@ -96,12 +98,14 @@ export function JournalEntryForm({ onSuccess }: JournalEntryFormProps) {
                 // Metadata
                 session,
                 notes,
-                tags: tags.split(",").map(t => t.trim()).filter(t => t !== ""),
-                beforeImageUrl,
+                tags: tags.split(",").map(t => t.trim()).filter(Boolean),
+                beforeImageUrl: finalBeforeImageUrl,
 
                 // Conditional fields
-                ...(strategy === "SupplyDemand" ? { zoneType, confirmation } : {}),
-                ...(strategy === "ICT" ? { pdArray, liquidityTarget, confirmation } : {}),
+                zoneType: strategy === "SupplyDemand" ? zoneType : undefined,
+                confirmation: strategy === "SupplyDemand" ? confirmation : (strategy === "ICT" ? confirmation : undefined),
+                pdArray: strategy === "ICT" ? pdArray : undefined,
+                liquidityTarget: strategy === "ICT" ? liquidityTarget : undefined,
             }
 
             await addTrade(tradeData)
