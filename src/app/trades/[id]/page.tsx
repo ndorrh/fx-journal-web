@@ -326,12 +326,65 @@ function TradeDetailsContent() {
                                         <div className="space-y-2">
                                             <label className="text-xs text-slate-500 uppercase">Instrument & Direction</label>
                                             <div className="flex gap-2">
-                                                <Input
+                                                <Select
                                                     value={editPlan.instrument || ""}
                                                     onChange={e => setEditPlan({ ...editPlan, instrument: e.target.value })}
-                                                    className="bg-slate-950 block"
-                                                    placeholder="e.g. EURUSD"
-                                                />
+                                                    className="bg-slate-950 block w-full"
+                                                >
+                                                    <optgroup label="Forex Majors">
+                                                        <option value="EURUSD">EURUSD</option>
+                                                        <option value="GBPUSD">GBPUSD</option>
+                                                        <option value="USDJPY">USDJPY</option>
+                                                        <option value="USDCAD">USDCAD</option>
+                                                        <option value="AUDUSD">AUDUSD</option>
+                                                        <option value="USDCHF">USDCHF</option>
+                                                        <option value="NZDUSD">NZDUSD</option>
+                                                    </optgroup>
+                                                    <optgroup label="Forex Minors & Crosses">
+                                                        <option value="EURGBP">EURGBP</option>
+                                                        <option value="EURAUD">EURAUD</option>
+                                                        <option value="EURCAD">EURCAD</option>
+                                                        <option value="EURJPY">EURJPY</option>
+                                                        <option value="EURNZD">EURNZD</option>
+                                                        <option value="EURCHF">EURCHF</option>
+
+                                                        <option value="GBPJPY">GBPJPY</option>
+                                                        <option value="GBPAUD">GBPAUD</option>
+                                                        <option value="GBPCAD">GBPCAD</option>
+                                                        <option value="GBPNZD">GBPNZD</option>
+                                                        <option value="GBPCHF">GBPCHF</option>
+
+                                                        <option value="AUDJPY">AUDJPY</option>
+                                                        <option value="AUDCAD">AUDCAD</option>
+                                                        <option value="AUDNZD">AUDNZD</option>
+                                                        <option value="AUDCHF">AUDCHF</option>
+
+                                                        <option value="NZDJPY">NZDJPY</option>
+                                                        <option value="NZDCAD">NZDCAD</option>
+                                                        <option value="NZDCHF">NZDCHF</option>
+
+                                                        <option value="CADJPY">CADJPY</option>
+                                                        <option value="CADCHF">CADCHF</option>
+                                                        <option value="CHFJPY">CHFJPY</option>
+                                                    </optgroup>
+                                                    <optgroup label="Metals & Crypto">
+                                                        <option value="XAUUSD">GOLD (XAUUSD)</option>
+                                                        <option value="BTCUSD">BITCOIN</option>
+                                                        <option value="ETHUSD">ETHEREUM</option>
+                                                    </optgroup>
+                                                    <optgroup label="Indices">
+                                                        <option value="US30">US30</option>
+                                                        <option value="NAS100">NAS100</option>
+                                                        <option value="SPX500">S&P 500</option>
+                                                        <option value="GER40">DAX (GER40)</option>
+                                                    </optgroup>
+                                                    <optgroup label="Stocks">
+                                                        <option value="AAPL">Apple</option>
+                                                        <option value="TSLA">Tesla</option>
+                                                        <option value="NVDA">NVIDIA</option>
+                                                        <option value="AMZN">Amazon</option>
+                                                    </optgroup>
+                                                </Select>
                                                 <Select value={editPlan.direction} onChange={(e) => setEditPlan({ ...editPlan, direction: e.target.value as any })} className="w-[100px] bg-slate-950">
                                                     <option value="Long">Long</option>
                                                     <option value="Short">Short</option>
