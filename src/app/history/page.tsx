@@ -70,7 +70,7 @@ function HistoryContent() {
                     setLoading(true);
                     const { importTrades } = await import("@/lib/services/tradeService");
                     const result = await importTrades(effectiveUserId, trades);
-                    alert(`Import Complete!\nSuccess: ${result.imported}\nErrors: ${result.errors}`);
+                    alert(`Import Complete!\n🆕 Created: ${result.created}\n🔄 Updated: ${result.updated}\n⚠️ Errors: ${result.errors}`);
                     window.location.reload();
                 }
             } catch (err) {

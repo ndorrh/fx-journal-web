@@ -78,7 +78,8 @@ export const exportTrades = async (userId: string): Promise<Trade[]> => {
 import { setDoc } from "firebase/firestore";
 
 export const importTrades = async (userId: string, trades: Trade[]) => {
-    let imported = 0;
+    let created = 0;
+    let updated = 0;
     let errors = 0;
 
     for (const trade of trades) {
@@ -97,15 +98,16 @@ export const importTrades = async (userId: string, trades: Trade[]) => {
             if (id) {
                 const docRef = doc(db, USERS_COLLECTION, userId, TRADES_COLLECTION, id);
                 await setDoc(docRef, tradeData, { merge: true });
+                updated++;
             } else {
                 const userTradesRef = collection(db, USERS_COLLECTION, userId, TRADES_COLLECTION);
                 await addDoc(userTradesRef, tradeData);
+                created++;
             }
-            imported++;
         } catch (e) {
             console.error("Failed to import trade:", trade, e);
             errors++;
         }
     }
-    return { imported, errors };
+    return { created, updated, errors };
 };
