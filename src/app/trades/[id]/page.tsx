@@ -329,6 +329,17 @@ function TradeDetailsContent() {
                                             className="bg-slate-950"
                                             placeholder="https://..."
                                         />
+                                        {editPlan.beforeImageUrl && (
+                                            <div className="relative w-full h-32 rounded-lg overflow-hidden border border-slate-700 mt-2">
+                                                <img
+                                                    src={editPlan.beforeImageUrl}
+                                                    alt="Plan Preview"
+                                                    className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform"
+                                                    referrerPolicy="no-referrer"
+                                                    onClick={() => window.open(editPlan.beforeImageUrl, '_blank')}
+                                                />
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="space-y-2">
@@ -433,7 +444,13 @@ function TradeDetailsContent() {
                                 />
                                 {afterImageUrl && (
                                     <div className="relative w-full h-32 rounded-lg overflow-hidden border border-slate-700 mt-2">
-                                        <img src={afterImageUrl} alt="Result Preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                        <img
+                                            src={afterImageUrl}
+                                            alt="Result Preview"
+                                            className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform"
+                                            referrerPolicy="no-referrer"
+                                            onClick={() => window.open(afterImageUrl, '_blank')}
+                                        />
                                     </div>
                                 )}
                             </div>
