@@ -70,3 +70,42 @@ export const uploadTradeImage = async (file: File, userId: string): Promise<stri
     return await getDownloadURL(snapshot.ref);
 }
 */
+
+export const exportTrades = async (userId: string): Promise<Trade[]> => {
+    return await getTrades(userId);
+};
+
+import { setDoc } from "firebase/firestore";
+
+export const importTrades = async (userId: string, trades: Trade[]) => {
+    let imported = 0;
+    let errors = 0;
+
+    for (const trade of trades) {
+        try {
+            // Remove 'id' from data if it exists, as it's the doc name
+            const { id, ...tradeData } = trade;
+
+            // Validate essential fields
+            if (!tradeData.date || !tradeData.instrument) {
+                console.warn("Skipping invalid trade:", trade);
+                continue;
+            }
+
+            // If ID exists in export, use it as doc ID (Upsert)
+            // If no ID (legacy?), let Firestore generate one (addDoc)
+            if (id) {
+                const docRef = doc(db, USERS_COLLECTION, userId, TRADES_COLLECTION, id);
+                await setDoc(docRef, tradeData, { merge: true });
+            } else {
+                const userTradesRef = collection(db, USERS_COLLECTION, userId, TRADES_COLLECTION);
+                await addDoc(userTradesRef, tradeData);
+            }
+            imported++;
+        } catch (e) {
+            console.error("Failed to import trade:", trade, e);
+            errors++;
+        }
+    }
+    return { imported, errors };
+};

@@ -36,6 +36,50 @@ function HistoryContent() {
         t.status.toLowerCase().includes(searchTerm.toLowerCase())
     )
 
+    const handleExport = async () => {
+        if (!effectiveUserId) return;
+        try {
+            const data = await getTrades(effectiveUserId);
+            const jsonString = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonString], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `fx_journal_backup_${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (e) {
+            console.error("Export failed:", e);
+            alert("Failed to export data");
+        }
+    };
+
+    const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !effectiveUserId) return;
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            try {
+                const json = event.target?.result as string;
+                const trades = JSON.parse(json);
+                if (!Array.isArray(trades)) throw new Error("Invalid format");
+
+                if (window.confirm(`Found ${trades.length} trades in backup. Restore/Merge them now?`)) {
+                    setLoading(true);
+                    const { importTrades } = await import("@/lib/services/tradeService");
+                    const result = await importTrades(effectiveUserId, trades);
+                    alert(`Import Complete!\nSuccess: ${result.imported}\nErrors: ${result.errors}`);
+                    window.location.reload();
+                }
+            } catch (err) {
+                alert("Failed to parse JSON file. Ensure it is a valid backup.");
+            }
+        };
+        reader.readAsText(file);
+    };
+
     if (loading) return <div className="p-8 text-white">Loading history...</div>
 
     return (
@@ -49,10 +93,27 @@ function HistoryContent() {
                         </h1>
                         <p className="text-slate-400 mt-1">Full history of all executions and plans.</p>
                     </div>
-                    <Button variant="ghost" onClick={() => router.push('/')} className="text-slate-400 hover:text-white">
-                        <ArrowLeft className="w-4 h-4 mr-2" />
-                        Back to Dashboard
-                    </Button>
+                    <div className="flex gap-3">
+                        <div className="relative">
+                            <input
+                                type="file"
+                                accept=".json"
+                                onChange={handleImport}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                title="Import JSON"
+                            />
+                            <Button variant="outline" className="border-slate-700 hover:bg-slate-800 text-slate-300">
+                                <span className="mr-2">📥</span> Import
+                            </Button>
+                        </div>
+                        <Button variant="outline" onClick={handleExport} className="border-slate-700 hover:bg-slate-800 text-slate-300">
+                            <span className="mr-2">📤</span> Export Data
+                        </Button>
+                        <Button variant="ghost" onClick={() => router.push('/')} className="text-slate-400 hover:text-white border border-transparent hover:border-slate-800">
+                            <ArrowLeft className="w-4 h-4 mr-2" />
+                            Back to Dashboard
+                        </Button>
+                    </div>
                 </div>
 
                 <Card className="glass-card bg-slate-950/50 border-slate-800">
