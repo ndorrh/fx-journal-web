@@ -39,7 +39,7 @@ function HistoryContent() {
     if (loading) return <div className="p-8 text-white">Loading history...</div>
 
     return (
-        <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-[#0a0f1e] to-black text-white p-4 md:p-8">
+        <div className="">
             <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in">
 
                 <div className="flex items-center justify-between">

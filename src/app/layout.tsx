@@ -29,6 +29,8 @@ export const metadata: Metadata = {
 };
 
 import { AuthProvider } from "@/context/AuthContext";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { Suspense } from "react";
 
 export default function RootLayout({
   children,
@@ -42,7 +44,11 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <AuthProvider>
-          {children}
+          <Suspense fallback={null}>
+            <AppLayout>
+              {children}
+            </AppLayout>
+          </Suspense>
         </AuthProvider>
       </body>
     </html>

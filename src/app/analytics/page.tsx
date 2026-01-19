@@ -7,22 +7,28 @@ import { AnalyticsChart } from "@/components/features/AnalyticsChart"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
 import { Button } from "@/components/ui/Button"
 import { ArrowLeft } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 
-export default function AnalyticsPage() {
+import { Suspense } from "react"
+
+function AnalyticsPage() {
     const { user } = useAuth()
     const router = useRouter()
+    const searchParams = useSearchParams()
+    const viewAsUserId = searchParams.get('userId')
+    const effectiveUserId = viewAsUserId || user?.uid
+
     const [trades, setTrades] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        if (user) {
-            getTrades(user.uid).then(t => {
+        if (effectiveUserId) {
+            getTrades(effectiveUserId).then(t => {
                 setTrades(t.filter(x => x.status === "Closed" || x.outcome)) // Only closed trades
                 setLoading(false)
             })
         }
-    }, [user])
+    }, [effectiveUserId])
 
     // --- Metrics Calculations ---
     const metrics = useMemo(() => {
@@ -144,5 +150,13 @@ export default function AnalyticsPage() {
                 </div>
             </div>
         </div>
+    )
+}
+
+export default function AnalyticsPageWrapper() {
+    return (
+        <Suspense fallback={<div className="p-8 text-white">Loading analytics...</div>}>
+            <AnalyticsPage />
+        </Suspense>
     )
 }

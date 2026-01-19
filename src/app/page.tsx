@@ -17,7 +17,7 @@ function HomeContent() {
   const { user } = useAuth()
   const [activeTab, setActiveTab] = useState("Daily")
   const [trades, setTrades] = useState<any[]>([])
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  // Modal handled globally in AppLayout
   const [loading, setLoading] = useState(false)
 
   // Load params to check for impersonation
@@ -51,26 +51,11 @@ function HomeContent() {
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-[#0a0f1e] to-black text-white">
-
-      {/* Navbar with Action Trigger */}
-      <Navbar onNewTradeClick={() => setIsModalOpen(true)} />
+    <main className="">
+      {/* Navbar handled globally in AppLayout */}
 
       <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-8">
-
-        {/* Modal for Trade Entry */}
-        <Modal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          title="Log New Trade Plan"
-        >
-          <JournalEntryForm
-            targetUserId={effectiveUserId || undefined}
-            onSuccess={() => {
-              setIsModalOpen(false) // Auto close
-              loadTrades() // Refresh data
-            }} />
-        </Modal>
+        {/* Modal handled globally */}
 
         {/* Dashboard Content */}
         {!user ? (
