@@ -8,8 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
 import { useAuth } from "@/context/AuthContext"
 import { addTrade } from "@/lib/services/tradeService"
 import { Trade, StrategyType } from "@/types"
-import { convertGoogleDriveLink } from "@/lib/utils"
+import { convertGoogleDriveLink, cleanUndefined } from "@/lib/utils"
 import { AdminActingAsBanner } from "@/components/admin/AdminActingAsBanner"
+import { ImageUploader } from "@/components/ui/ImageUploader"
 
 interface JournalEntryFormProps {
     onSuccess?: () => void
@@ -113,7 +114,7 @@ export function JournalEntryForm({ onSuccess, targetUserId }: JournalEntryFormPr
                 liquidityTarget: strategy === "ICT" ? liquidityTarget : undefined,
             }
 
-            await addTrade(tradeData)
+            await addTrade(cleanUndefined(tradeData))
 
             setSuccessMsg("Trade Plan Saved! Good luck.")
             setTimeout(() => setSuccessMsg(""), 3000)
@@ -394,25 +395,19 @@ export function JournalEntryForm({ onSuccess, targetUserId }: JournalEntryFormPr
 
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium text-slate-300">Chart URL (Optional)</label>
-                                        <Input
-                                            placeholder="TradingView or Google Drive Link..."
+                                        <ImageUploader
                                             value={beforeImageUrl}
-                                            onChange={(e) => {
-                                                const val = e.target.value;
-                                                const converted = convertGoogleDriveLink(val);
+                                            onChange={(url) => {
+                                                const converted = convertGoogleDriveLink(url);
                                                 setBeforeImageUrl(converted);
                                             }}
-                                            className="h-10 bg-slate-900/50"
+                                            placeholder="TradingView Link, Google Drive Link, or Upload"
                                         />
                                     </div>
 
-                                    {beforeImageUrl ? (
-                                        <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-slate-700 bg-black">
+                                    {beforeImageUrl && (
+                                        <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-slate-700 bg-black mt-4">
                                             <img src={beforeImageUrl} alt="Setup" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                                        </div>
-                                    ) : (
-                                        <div className="w-full aspect-video rounded-lg border border-dashed border-slate-800 flex items-center justify-center bg-slate-900/20">
-                                            <span className="text-xs text-slate-600">No Image Preview</span>
                                         </div>
                                     )}
 

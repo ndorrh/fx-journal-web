@@ -15,6 +15,7 @@ import { Select } from "@/components/ui/Select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
 import { ArrowLeft } from "lucide-react"
 import { AdminActingAsBanner } from "@/components/admin/AdminActingAsBanner"
+import { ImageUploader } from "@/components/ui/ImageUploader"
 
 
 function TradeDetailsContent() {
@@ -319,14 +320,12 @@ function TradeDetailsContent() {
 
                                     <div className="space-y-2">
                                         <label className="text-xs text-slate-500 uppercase">Chart URL</label>
-                                        <Input
+                                        <ImageUploader
                                             value={editPlan.beforeImageUrl || ""}
-                                            onChange={e => {
-                                                const val = e.target.value;
-                                                const converted = convertGoogleDriveLink(val);
+                                            onChange={(url) => {
+                                                const converted = convertGoogleDriveLink(url);
                                                 setEditPlan({ ...editPlan, beforeImageUrl: converted });
                                             }}
-                                            className="bg-slate-950"
                                             placeholder="https://..."
                                         />
                                         {editPlan.beforeImageUrl && (
@@ -432,15 +431,13 @@ function TradeDetailsContent() {
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-slate-300">Result Image URL (TradingView or Google Drive)</label>
-                                <Input
-                                    className="bg-slate-950/50 border-slate-800 focus:border-purple-500"
-                                    placeholder="https://..."
+                                <ImageUploader
                                     value={afterImageUrl}
-                                    onChange={(e) => {
-                                        const val = e.target.value;
-                                        const converted = convertGoogleDriveLink(val);
+                                    onChange={(url) => {
+                                        const converted = convertGoogleDriveLink(url);
                                         setAfterImageUrl(converted);
                                     }}
+                                    placeholder="https://... or Upload"
                                 />
                                 {afterImageUrl && (
                                     <div className="relative w-full h-32 rounded-lg overflow-hidden border border-slate-700 mt-2">
