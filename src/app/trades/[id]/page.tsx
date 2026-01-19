@@ -152,12 +152,24 @@ function TradeDetailsContent() {
                 return;
             }
 
-            // 2. Outcome Rule: If Outcome is "Win", PnL must be positive
+            // 2. Outcome Rule: Logic Checks
             const pnlVal = parseFloat(pnl);
-            if (outcome === "Win" && !isNaN(pnlVal) && pnlVal <= 0) {
-                setError("⛔ Logic Error: If Outcome is 'Win', PnL must be positive.");
-                setSaving(false);
-                return;
+            if (!isNaN(pnlVal)) {
+                if (outcome === "Win" && pnlVal <= 0) {
+                    setError("⛔ Logic Error: If Outcome is 'Win', PnL must be positive.");
+                    setSaving(false);
+                    return;
+                }
+                if (outcome === "Loss" && pnlVal > 0) {
+                    setError("⛔ Logic Error: If Outcome is 'Loss', PnL must be negative or zero.");
+                    setSaving(false);
+                    return;
+                }
+                if (outcome === "BE" && Math.abs(pnlVal) > 10) {
+                    setError("⛔ Logic Error: If Outcome is 'Break Even', PnL should be near zero (within +/- $10).");
+                    setSaving(false);
+                    return;
+                }
             }
 
             const updateData = cleanUndefined({
