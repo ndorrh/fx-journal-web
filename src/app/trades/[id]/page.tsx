@@ -209,7 +209,7 @@ function TradeDetailsContent() {
                                             <div>
                                                 <label className="text-xs text-slate-500 uppercase block mb-1">Setup Chart</label>
                                                 <div className="rounded-lg overflow-hidden border border-slate-700">
-                                                    <img src={trade.beforeImageUrl} alt="Plan" className="w-full h-auto object-cover hover:scale-105 transition-transform duration-500 cursor-pointer" onClick={() => window.open(trade.beforeImageUrl, '_blank')} />
+                                                    <img src={trade.beforeImageUrl} alt="Plan" className="w-full h-auto object-cover hover:scale-105 transition-transform duration-500 cursor-pointer" onClick={() => window.open(trade.beforeImageUrl, '_blank')} referrerPolicy="no-referrer" />
                                                 </div>
                                             </div>
                                         )}
@@ -422,7 +422,7 @@ function TradeDetailsContent() {
                                 />
                                 {afterImageUrl && (
                                     <div className="relative w-full h-32 rounded-lg overflow-hidden border border-slate-700 mt-2">
-                                        <img src={afterImageUrl} alt="Result Preview" className="w-full h-full object-cover" />
+                                        <img src={afterImageUrl} alt="Result Preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                                     </div>
                                 )}
                             </div>

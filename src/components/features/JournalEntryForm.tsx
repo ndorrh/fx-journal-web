@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext"
 import { addTrade } from "@/lib/services/tradeService"
 import { Trade, StrategyType } from "@/types"
 import { convertGoogleDriveLink } from "@/lib/utils"
+import { AdminActingAsBanner } from "@/components/admin/AdminActingAsBanner"
 
 interface JournalEntryFormProps {
     onSuccess?: () => void
@@ -150,6 +151,8 @@ export function JournalEntryForm({ onSuccess, targetUserId }: JournalEntryFormPr
                 </CardHeader>
                 <CardContent className="pt-6">
                     <form onSubmit={handleSubmit} className="space-y-8">
+
+                        <AdminActingAsBanner targetUserId={targetUserId || ""} currentUserId={user?.uid} />
 
                         {successMsg && (
                             <div className="bg-green-500/10 border border-green-500/50 text-green-400 px-4 py-3 rounded-md text-center font-medium animate-pulse">
@@ -405,7 +408,7 @@ export function JournalEntryForm({ onSuccess, targetUserId }: JournalEntryFormPr
 
                                     {beforeImageUrl ? (
                                         <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-slate-700 bg-black">
-                                            <img src={beforeImageUrl} alt="Setup" className="w-full h-full object-cover" />
+                                            <img src={beforeImageUrl} alt="Setup" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                                         </div>
                                     ) : (
                                         <div className="w-full aspect-video rounded-lg border border-dashed border-slate-800 flex items-center justify-center bg-slate-900/20">

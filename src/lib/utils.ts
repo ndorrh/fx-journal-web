@@ -15,7 +15,9 @@ export function convertGoogleDriveLink(url: string): string {
   const match = url.match(idPattern);
 
   if (match && match[1]) {
-    return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+    // Use the thumbnail API which is more reliable for embedding than uc?export=view
+    // sz=w1920 ensures a high-res image
+    return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1920`;
   }
 
   return url;
