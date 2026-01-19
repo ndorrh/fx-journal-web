@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
 import { ArrowLeft } from "lucide-react"
 import { AdminActingAsBanner } from "@/components/admin/AdminActingAsBanner"
 import { ImageUploader } from "@/components/ui/ImageUploader"
+import { Tooltip } from "@/components/ui/Tooltip"
 
 
 function TradeDetailsContent() {
@@ -138,6 +139,24 @@ function TradeDetailsContent() {
         if (!user || !trade || !trade.id) return
         setSaving(true)
         try {
+            // VALIDATION RULES
+            // 1. Physics Rule: Actual RR cannot be greater than MFE
+            const mfeVal = parseFloat(maxFavorableExcursion);
+            const arrVal = parseFloat(actualRR);
+            if (!isNaN(mfeVal) && !isNaN(arrVal) && arrVal > mfeVal) {
+                alert("Error: You can't bank more R than the price actually moved! (Actual R > MFE)");
+                setSaving(false);
+                return;
+            }
+
+            // 2. Outcome Rule: If Outcome is "Win", PnL must be positive
+            const pnlVal = parseFloat(pnl);
+            if (outcome === "Win" && !isNaN(pnlVal) && pnlVal <= 0) {
+                alert("Error: If Outcome is 'Win', PnL must be positive.");
+                setSaving(false);
+                return;
+            }
+
             const updateData = cleanUndefined({
                 status: "Closed",
                 exitPrice: parseFloat(exitPrice),
@@ -370,7 +389,9 @@ function TradeDetailsContent() {
                                     {/* --- Section 1: Core Info --- */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <label className="text-xs text-slate-500 uppercase">Instrument & Direction</label>
+                                            <Tooltip content="Asset pair and trade direction.">
+                                                <label className="text-xs text-slate-500 uppercase">Instrument & Direction</label>
+                                            </Tooltip>
                                             <div className="flex gap-2">
                                                 <Select
                                                     value={editPlan.instrument || ""}
@@ -438,7 +459,9 @@ function TradeDetailsContent() {
                                             </div>
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-xs text-slate-500 uppercase">Date (Planned)</label>
+                                            <Tooltip content="Planned execution date.">
+                                                <label className="text-xs text-slate-500 uppercase">Date (Planned)</label>
+                                            </Tooltip>
                                             <input
                                                 type="datetime-local"
                                                 value={editPlan.date ? new Date(editPlan.date).toISOString().slice(0, 16) : ""}
@@ -451,7 +474,9 @@ function TradeDetailsContent() {
                                     {/* --- Section 2: Numbers --- */}
                                     <div className="grid grid-cols-2 gap-4 border-t border-slate-800/50 pt-4">
                                         <div className="space-y-2">
-                                            <label className="text-xs text-slate-500 uppercase">Entry</label>
+                                            <Tooltip content="Planned entry price.">
+                                                <label className="text-xs text-slate-500 uppercase">Entry</label>
+                                            </Tooltip>
                                             <Input
                                                 type="number" step="0.00001"
                                                 value={editPlan.plannedEntry || ""}
@@ -460,7 +485,9 @@ function TradeDetailsContent() {
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-xs text-red-400/80 uppercase">Stop Loss</label>
+                                            <Tooltip content="Invalidation level.">
+                                                <label className="text-xs text-red-400/80 uppercase">Stop Loss</label>
+                                            </Tooltip>
                                             <Input
                                                 type="number" step="0.00001"
                                                 value={editPlan.plannedSL || ""}
@@ -469,7 +496,9 @@ function TradeDetailsContent() {
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-xs text-green-400/80 uppercase">Target</label>
+                                            <Tooltip content="Profit target.">
+                                                <label className="text-xs text-green-400/80 uppercase">Target</label>
+                                            </Tooltip>
                                             <Input
                                                 type="number" step="0.00001"
                                                 value={editPlan.plannedTP || ""}
@@ -478,7 +507,9 @@ function TradeDetailsContent() {
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-xs text-amber-400/80 uppercase">Risk ($)</label>
+                                            <Tooltip content="Dollar risk amount.">
+                                                <label className="text-xs text-amber-400/80 uppercase">Risk ($)</label>
+                                            </Tooltip>
                                             <Input
                                                 type="number" step="1"
                                                 value={editPlan.riskAmount || ""}
@@ -491,7 +522,9 @@ function TradeDetailsContent() {
                                     {/* --- Section 3: Context --- */}
                                     <div className="grid grid-cols-2 gap-4 border-t border-slate-800/50 pt-4">
                                         <div className="space-y-2">
-                                            <label className="text-xs text-slate-500 uppercase">Strategy</label>
+                                            <Tooltip content="Trading strategy used.">
+                                                <label className="text-xs text-slate-500 uppercase">Strategy</label>
+                                            </Tooltip>
                                             <Select value={editPlan.strategy} onChange={(e) => setEditPlan({ ...editPlan, strategy: e.target.value as any })} className="bg-slate-950">
                                                 <option value="SupplyDemand">Supply & Demand</option>
                                                 <option value="ICT">ICT</option>
@@ -499,7 +532,9 @@ function TradeDetailsContent() {
                                             </Select>
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-xs text-slate-500 uppercase">Reason</label>
+                                            <Tooltip content="Primary reason for entry.">
+                                                <label className="text-xs text-slate-500 uppercase">Reason</label>
+                                            </Tooltip>
                                             <Select value={editPlan.entryReason} onChange={(e) => setEditPlan({ ...editPlan, entryReason: e.target.value })} className="bg-slate-950">
                                                 <option value="Technical">Technical</option>
                                                 <option value="Fundamental">Fundamental</option>
@@ -512,7 +547,9 @@ function TradeDetailsContent() {
                                     {/* --- Extended Metrics (Sleep & Time) --- */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-800/50 pt-4">
                                         <div className="space-y-2 sm:col-span-2">
-                                            <label className="text-xs text-slate-500 uppercase">Sleep Score</label>
+                                            <Tooltip content="Sleep quality (1-10).">
+                                                <label className="text-xs text-slate-500 uppercase">Sleep Score</label>
+                                            </Tooltip>
                                             <Select
                                                 value={editPlan.sleepScore || ""}
                                                 onChange={e => setEditPlan({ ...editPlan, sleepScore: parseInt(e.target.value) })}
@@ -525,7 +562,9 @@ function TradeDetailsContent() {
                                             </Select>
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-xs text-slate-500 uppercase">Zone Created</label>
+                                            <Tooltip content="When the zone was created.">
+                                                <label className="text-xs text-slate-500 uppercase">Zone Created</label>
+                                            </Tooltip>
                                             <input
                                                 type="datetime-local"
                                                 value={editPlan.zoneCreationTime ? new Date(editPlan.zoneCreationTime).toISOString().slice(0, 16) : ""}
@@ -534,7 +573,9 @@ function TradeDetailsContent() {
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-xs text-slate-500 uppercase">Est. Entry</label>
+                                            <Tooltip content="Expected entry time.">
+                                                <label className="text-xs text-slate-500 uppercase">Est. Entry</label>
+                                            </Tooltip>
                                             <input
                                                 type="datetime-local"
                                                 value={editPlan.entryTime ? new Date(editPlan.entryTime).toISOString().slice(0, 16) : ""}
@@ -546,7 +587,9 @@ function TradeDetailsContent() {
 
                                     <div className="space-y-4">
                                         <div className="space-y-2">
-                                            <label className="text-xs text-slate-500 uppercase">Setup Chart (Required)</label>
+                                            <Tooltip content="Chart showing the setup logic.">
+                                                <label className="text-xs text-slate-500 uppercase">Setup Chart (Required)</label>
+                                            </Tooltip>
                                             <ImageUploader
                                                 value={editPlan.beforeImageUrl || ""}
                                                 onChange={(url) => {
@@ -570,7 +613,9 @@ function TradeDetailsContent() {
                                         </div>
 
                                         <div className="space-y-2">
-                                            <label className="text-xs text-slate-500 uppercase">Confirmation Chart (Optional)</label>
+                                            <Tooltip content="Chart showing confirmation trigger.">
+                                                <label className="text-xs text-slate-500 uppercase">Confirmation Chart (Optional)</label>
+                                            </Tooltip>
                                             <ImageUploader
                                                 value={editPlan.confirmationImageUrl || ""}
                                                 onChange={(url) => {
@@ -595,7 +640,9 @@ function TradeDetailsContent() {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-xs text-slate-500 uppercase">Notes</label>
+                                        <Tooltip content="Detailed trading plan notes.">
+                                            <label className="text-xs text-slate-500 uppercase">Notes</label>
+                                        </Tooltip>
                                         <textarea
                                             value={editPlan.notes || ""}
                                             onChange={e => setEditPlan({ ...editPlan, notes: e.target.value })}
@@ -616,7 +663,9 @@ function TradeDetailsContent() {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-slate-300">Exit Price</label>
+                                    <Tooltip content="The price at which you closed the trade.">
+                                        <label className="text-sm font-medium text-slate-300">Exit Price</label>
+                                    </Tooltip>
                                     <Input
                                         type="number" step="0.00001"
                                         className="bg-slate-950/50 border-slate-800 focus:border-purple-500"
@@ -626,7 +675,9 @@ function TradeDetailsContent() {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-slate-300">Outcome</label>
+                                    <Tooltip content="Did you Win, Lose, or Break Even?">
+                                        <label className="text-sm font-medium text-slate-300">Outcome</label>
+                                    </Tooltip>
                                     <Select
                                         className="bg-slate-950/50 border-slate-800 focus:border-purple-500"
                                         value={outcome}
@@ -641,7 +692,9 @@ function TradeDetailsContent() {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-slate-300">PnL ($)</label>
+                                    <Tooltip content="Realized Profit or Loss in dollars.">
+                                        <label className="text-sm font-medium text-slate-300">PnL ($)</label>
+                                    </Tooltip>
                                     <Input
                                         type="number"
                                         className="bg-slate-950/50 border-slate-800 focus:border-purple-500"
@@ -651,7 +704,9 @@ function TradeDetailsContent() {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-slate-300">Realized RR</label>
+                                    <Tooltip content="Realized Risk:Reward ratio (e.g. 2.5).">
+                                        <label className="text-sm font-medium text-slate-300">Realized RR</label>
+                                    </Tooltip>
                                     <Input
                                         type="number" step="0.1"
                                         className="bg-slate-950/50 border-slate-800 focus:border-purple-500"
@@ -665,7 +720,9 @@ function TradeDetailsContent() {
                             {/* MAE / MFE */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-slate-300">MAE (Drawdown R)</label>
+                                    <Tooltip content="Max Adverse Excursion: The most negative R-multiple during the trade (Drawdown).">
+                                        <label className="text-sm font-medium text-slate-300">MAE (Drawdown R)</label>
+                                    </Tooltip>
                                     <Input
                                         type="number" step="0.1"
                                         className="bg-slate-950/50 border-red-900/30 focus:border-red-500 placeholder-red-900/50"
@@ -675,7 +732,9 @@ function TradeDetailsContent() {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-slate-300">MFE (Peak R)</label>
+                                    <Tooltip content="Max Favorable Excursion: The most positive R-multiple reached during the trade (Peak Profit).">
+                                        <label className="text-sm font-medium text-slate-300">MFE (Peak R)</label>
+                                    </Tooltip>
                                     <Input
                                         type="number" step="0.1"
                                         className="bg-slate-950/50 border-green-900/30 focus:border-green-500 placeholder-green-900/50"
@@ -687,7 +746,9 @@ function TradeDetailsContent() {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-300">Detailed Closing Reason</label>
+                                <Tooltip content="More specific reason for closing (e.g. 'Price hit daily support').">
+                                    <label className="text-sm font-medium text-slate-300">Detailed Closing Reason</label>
+                                </Tooltip>
                                 <Input
                                     className="bg-slate-950/50 border-slate-800 focus:border-purple-500"
                                     placeholder="Specific reason for closing..."
@@ -697,7 +758,9 @@ function TradeDetailsContent() {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-300">Post-Trade Emotion</label>
+                                <Tooltip content="How did you feel after closing the trade?">
+                                    <label className="text-sm font-medium text-slate-300">Post-Trade Emotion</label>
+                                </Tooltip>
                                 <Select
                                     className="bg-slate-950/50 border-slate-800 focus:border-purple-500"
                                     value={postTradeEmotion}
@@ -716,7 +779,9 @@ function TradeDetailsContent() {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-300">Why did you exit?</label>
+                                <Tooltip content="The trigger for your exit decision.">
+                                    <label className="text-sm font-medium text-slate-300">Why did you exit?</label>
+                                </Tooltip>
                                 <Input
                                     className="bg-slate-950/50 border-slate-800 focus:border-purple-500"
                                     placeholder="Target hit, Manual close, Stop hunt..."
@@ -726,7 +791,9 @@ function TradeDetailsContent() {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-300">Lessons Learned / Post-Trade Notes</label>
+                                <Tooltip content="What did you learn? What would you do differently?">
+                                    <label className="text-sm font-medium text-slate-300">Lessons Learned / Post-Trade Notes</label>
+                                </Tooltip>
                                 <textarea
                                     className="flex min-h-[80px] w-full rounded-md border border-slate-800 bg-slate-950/50 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus-visible:outline-none focus:border-purple-500"
                                     placeholder="What did you learn?..."
@@ -736,7 +803,9 @@ function TradeDetailsContent() {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-300">Result Image URL (TradingView or Google Drive)</label>
+                                <Tooltip content="Screenshot of the chart after the trade closed.">
+                                    <label className="text-sm font-medium text-slate-300">Result Image URL (TradingView or Google Drive)</label>
+                                </Tooltip>
                                 <ImageUploader
                                     value={afterImageUrl}
                                     onChange={(url) => {

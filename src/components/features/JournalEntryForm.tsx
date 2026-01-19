@@ -11,6 +11,7 @@ import { Trade, StrategyType } from "@/types"
 import { convertGoogleDriveLink, cleanUndefined } from "@/lib/utils"
 import { AdminActingAsBanner } from "@/components/admin/AdminActingAsBanner"
 import { ImageUploader } from "@/components/ui/ImageUploader"
+import { Tooltip } from "@/components/ui/Tooltip"
 
 interface JournalEntryFormProps {
     onSuccess?: () => void
@@ -240,7 +241,9 @@ export function JournalEntryForm({ onSuccess, targetUserId }: JournalEntryFormPr
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-slate-300">Instrument</label>
+                                    <Tooltip content="The currency pair or asset you are trading.">
+                                        <label className="text-sm font-medium text-slate-300">Instrument</label>
+                                    </Tooltip>
                                     <Select value={pair} onChange={(e) => setPair(e.target.value)} className="h-11">
                                         <optgroup label="Forex Majors">
                                             <option value="EURUSD">EURUSD</option>
@@ -298,7 +301,9 @@ export function JournalEntryForm({ onSuccess, targetUserId }: JournalEntryFormPr
                                     </Select>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-slate-300">Style</label>
+                                    <Tooltip content="Your trading style based on timeframe (Scalp, Day, Swing).">
+                                        <label className="text-sm font-medium text-slate-300">Style</label>
+                                    </Tooltip>
                                     <Select value={tradeType} onChange={(e) => setTradeType(e.target.value)} className="h-11">
                                         <option value="Scalping">Scalping (M1-M5)</option>
                                         <option value="Day Trade">Day Trade (M15-H1)</option>
@@ -307,7 +312,9 @@ export function JournalEntryForm({ onSuccess, targetUserId }: JournalEntryFormPr
                                     </Select>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-slate-300">Condition</label>
+                                    <Tooltip content="Current state of the market structure (Trending, Ranging, etc.).">
+                                        <label className="text-sm font-medium text-slate-300">Condition</label>
+                                    </Tooltip>
                                     <Select value={marketCondition} onChange={(e) => setMarketCondition(e.target.value)} className="h-11">
                                         <option value="Trending">Trending</option>
                                         <option value="Ranging">Ranging / Choppy</option>
@@ -317,7 +324,9 @@ export function JournalEntryForm({ onSuccess, targetUserId }: JournalEntryFormPr
                                     </Select>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-slate-300">Direction</label>
+                                    <Tooltip content="Are you buying (Long) or selling (Short)?">
+                                        <label className="text-sm font-medium text-slate-300">Direction</label>
+                                    </Tooltip>
                                     <div className="flex space-x-2 h-11">
                                         <Button type="button" variant={direction === "Long" ? "neon" : "outline"} onClick={() => setDirection("Long")} className="flex-1 h-full">Long</Button>
                                         <Button type="button" variant={direction === "Short" ? "destructive" : "outline"} onClick={() => setDirection("Short")} className="flex-1 h-full">Short</Button>
@@ -326,7 +335,9 @@ export function JournalEntryForm({ onSuccess, targetUserId }: JournalEntryFormPr
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-slate-300">Date & Time</label>
+                                    <Tooltip content="The date and time you are planning this trade.">
+                                        <label className="text-sm font-medium text-slate-300">Date & Time</label>
+                                    </Tooltip>
                                     <input
                                         type="datetime-local"
                                         value={date}
@@ -335,7 +346,9 @@ export function JournalEntryForm({ onSuccess, targetUserId }: JournalEntryFormPr
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-slate-300">Session</label>
+                                    <Tooltip content="active trading session (London, New York, Asia).">
+                                        <label className="text-sm font-medium text-slate-300">Session</label>
+                                    </Tooltip>
                                     <Select value={session} onChange={(e) => setSession(e.target.value)} className="h-11">
                                         <option value="Asia">Asia</option>
                                         <option value="London">London</option>
@@ -362,28 +375,36 @@ export function JournalEntryForm({ onSuccess, targetUserId }: JournalEntryFormPr
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                                         <div className="space-y-2">
                                             <div className="flex justify-between">
-                                                <label className="text-sm text-slate-400">Entry</label>
+                                                <Tooltip content="Your planned entry price (Limit/Market).">
+                                                    <label className="text-sm text-slate-400">Entry</label>
+                                                </Tooltip>
                                                 <span className="text-[10px] text-slate-600">LIMIT</span>
                                             </div>
                                             <Input type="number" step="0.00001" placeholder="1.00000" className="h-12 text-lg font-mono bg-slate-950/50" value={plannedEntry} onChange={(e) => setPlannedEntry(e.target.value)} />
                                         </div>
                                         <div className="space-y-2">
                                             <div className="flex justify-between">
-                                                <label className="text-sm text-red-400/80">Stop Loss</label>
+                                                <Tooltip content="Price where your trade idea is invalid.">
+                                                    <label className="text-sm text-red-400/80">Stop Loss</label>
+                                                </Tooltip>
                                                 <span className="text-[10px] text-red-900/60">Level</span>
                                             </div>
                                             <Input type="number" step="0.00001" placeholder="0.99800" className="h-12 text-lg font-mono bg-red-950/10 border-red-900/30 text-red-200 focus:border-red-500/50" value={plannedSL} onChange={(e) => setPlannedSL(e.target.value)} />
                                         </div>
                                         <div className="space-y-2">
                                             <div className="flex justify-between">
-                                                <label className="text-sm text-amber-400/80">Risk ($)</label>
+                                                <Tooltip content="Total dollar amount being risked on this trade.">
+                                                    <label className="text-sm text-amber-400/80">Risk ($)</label>
+                                                </Tooltip>
                                                 <span className="text-[10px] text-amber-900/60">$$$</span>
                                             </div>
                                             <Input type="number" step="1" placeholder="50" className="h-12 text-lg font-mono bg-amber-950/10 border-amber-900/30 text-amber-200 focus:border-amber-500/50" value={riskAmount} onChange={(e) => setRiskAmount(e.target.value)} />
                                         </div>
                                         <div className="space-y-2">
                                             <div className="flex justify-between">
-                                                <label className="text-sm text-green-400/80">Take Profit</label>
+                                                <Tooltip content="Target price level for profit taking.">
+                                                    <label className="text-sm text-green-400/80">Take Profit</label>
+                                                </Tooltip>
                                                 <span className="text-[10px] text-green-900/60">Target</span>
                                             </div>
                                             <Input type="number" step="0.00001" placeholder="1.00500" className="h-12 text-lg font-mono bg-green-950/10 border-green-900/30 text-green-200 focus:border-green-500/50" value={plannedTP} onChange={(e) => setPlannedTP(e.target.value)} />
@@ -392,11 +413,15 @@ export function JournalEntryForm({ onSuccess, targetUserId }: JournalEntryFormPr
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-end">
                                         <div className="space-y-2">
-                                            <label className="text-sm text-slate-400">Size (Lots)</label>
+                                            <Tooltip content="Position size in standard lots.">
+                                                <label className="text-sm text-slate-400">Size (Lots)</label>
+                                            </Tooltip>
                                             <Input type="number" step="0.01" placeholder="1.0" className="h-10" value={positionSize} onChange={(e) => setPositionSize(e.target.value)} />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-sm text-slate-400">Context Class</label>
+                                            <Tooltip content="Primary reason for taking this trade setup.">
+                                                <label className="text-sm text-slate-400">Context Class</label>
+                                            </Tooltip>
                                             <Select value={entryReason} onChange={(e) => setEntryReason(e.target.value)} className="h-10">
                                                 <option value="">Select Category...</option>
                                                 <option value="Technical">Technical Structure</option>
@@ -480,7 +505,9 @@ export function JournalEntryForm({ onSuccess, targetUserId }: JournalEntryFormPr
 
                                 <div className="space-y-4">
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium text-slate-300">How do you feel?</label>
+                                        <Tooltip content="Your emotional state before entering the trade. Be honest!">
+                                            <label className="text-sm font-medium text-slate-300">How do you feel?</label>
+                                        </Tooltip>
                                         <Select value={preTradeEmotion} onChange={(e) => setPreTradeEmotion(e.target.value)} className="h-10 border-slate-700">
                                             <option value="">Select Emotion...</option>
                                             <option value="Calm">🧘 Calm / Flow State</option>
@@ -495,7 +522,9 @@ export function JournalEntryForm({ onSuccess, targetUserId }: JournalEntryFormPr
                                     {/* EXTENDED METRICS: Sleep & Timing */}
                                     <div className="grid grid-cols-2 gap-4 pt-2">
                                         <div className="space-y-1">
-                                            <label className="text-xs font-semibold text-slate-400 uppercase">Sleep Score (1-10)</label>
+                                            <Tooltip content="Rate your sleep quality last night (1=Poor, 10=Excellent).">
+                                                <label className="text-xs font-semibold text-slate-400 uppercase">Sleep Score (1-10)</label>
+                                            </Tooltip>
                                             <Select value={sleepScore} onChange={(e) => setSleepScore(e.target.value)} className="h-9 text-sm">
                                                 <option value="">Rate Sleep...</option>
                                                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
@@ -504,7 +533,9 @@ export function JournalEntryForm({ onSuccess, targetUserId }: JournalEntryFormPr
                                             </Select>
                                         </div>
                                         <div className="space-y-1">
-                                            <label className="text-xs font-semibold text-slate-400 uppercase">Est. Entry Time</label>
+                                            <Tooltip content="When do you expect to enter? Used to calculate Time-To-Entry.">
+                                                <label className="text-xs font-semibold text-slate-400 uppercase">Est. Entry Time</label>
+                                            </Tooltip>
                                             <input
                                                 type="datetime-local"
                                                 className="w-full bg-slate-900 border border-slate-700 rounded h-9 px-2 text-xs text-slate-200"
@@ -515,7 +546,9 @@ export function JournalEntryForm({ onSuccess, targetUserId }: JournalEntryFormPr
                                     </div>
 
                                     <div className="space-y-1">
-                                        <label className="text-xs font-semibold text-slate-400 uppercase">Zone Created At</label>
+                                        <Tooltip content="When was the Supply/Demand zone formed?">
+                                            <label className="text-xs font-semibold text-slate-400 uppercase">Zone Created At</label>
+                                        </Tooltip>
                                         <input
                                             type="datetime-local"
                                             className="w-full bg-slate-900 border border-slate-700 rounded h-9 px-2 text-xs text-slate-200"
