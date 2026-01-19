@@ -23,6 +23,13 @@ function HistoryContent() {
     const [filterDirection, setFilterDirection] = useState("All")
     const [filterStatus, setFilterStatus] = useState("All")
     const [filterOutcome, setFilterOutcome] = useState("All")
+
+    // Date & Time Filters
+    const [filterStartDate, setFilterStartDate] = useState("")
+    const [filterEndDate, setFilterEndDate] = useState("")
+    const [filterStartTime, setFilterStartTime] = useState("")
+    const [filterEndTime, setFilterEndTime] = useState("")
+
     const [showFilters, setShowFilters] = useState(false)
 
     const searchParams = useSearchParams()
@@ -43,6 +50,10 @@ function HistoryContent() {
     const strategies = ["All", ...Array.from(new Set(trades.map(t => t.strategy).filter(Boolean))).sort()]
 
     const filteredTrades = trades.filter(t => {
+        const tradeDateObj = new Date(t.date)
+        const tradeDateStr = tradeDateObj.toISOString().slice(0, 10) // YYYY-MM-DD
+        const tradeTimeStr = tradeDateObj.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) // HH:MM
+
         const matchesSearch =
             t.instrument.toLowerCase().includes(searchTerm.toLowerCase()) ||
             t.strategy.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -54,7 +65,17 @@ function HistoryContent() {
         const matchesStatus = filterStatus === "All" || t.status === filterStatus
         const matchesOutcome = filterOutcome === "All" || (t.outcome || "Open") === filterOutcome
 
-        return matchesSearch && matchesInstrument && matchesStrategy && matchesDirection && matchesStatus && matchesOutcome
+        // Date Range
+        const matchesStartDate = !filterStartDate || tradeDateStr >= filterStartDate
+        const matchesEndDate = !filterEndDate || tradeDateStr <= filterEndDate
+
+        // Time Range
+        const matchesStartTime = !filterStartTime || tradeTimeStr >= filterStartTime
+        const matchesEndTime = !filterEndTime || tradeTimeStr <= filterEndTime
+
+        return matchesSearch && matchesInstrument && matchesStrategy && matchesDirection &&
+            matchesStatus && matchesOutcome && matchesStartDate && matchesEndDate &&
+            matchesStartTime && matchesEndTime
     })
 
     const handleExport = async () => {
@@ -110,6 +131,10 @@ function HistoryContent() {
         setFilterDirection("All")
         setFilterStatus("All")
         setFilterOutcome("All")
+        setFilterStartDate("")
+        setFilterEndDate("")
+        setFilterStartTime("")
+        setFilterEndTime("")
     }
 
     if (loading) return <div className="p-8 text-white">Loading history...</div>
@@ -182,57 +207,99 @@ function HistoryContent() {
 
                         {/* ADVANCED FILTER BAR */}
                         {showFilters && (
-                            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 p-4 bg-slate-900/40 rounded-lg border border-slate-800 animate-in slide-in-from-top-2">
-                                <div className="space-y-1">
-                                    <label className="text-[10px] uppercase text-slate-500 font-bold">Instrument</label>
-                                    <select
-                                        className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-cyan-500"
-                                        value={filterInstrument}
-                                        onChange={(e) => setFilterInstrument(e.target.value)}
-                                    >
-                                        {instruments.map(inst => <option key={inst} value={inst}>{inst}</option>)}
-                                    </select>
+                            <div className="space-y-4 p-4 bg-slate-900/40 rounded-lg border border-slate-800 animate-in slide-in-from-top-2">
+                                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] uppercase text-slate-500 font-bold">Instrument</label>
+                                        <select
+                                            className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-cyan-500"
+                                            value={filterInstrument}
+                                            onChange={(e) => setFilterInstrument(e.target.value)}
+                                        >
+                                            {instruments.map(inst => <option key={inst} value={inst}>{inst}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] uppercase text-slate-500 font-bold">Strategy</label>
+                                        <select
+                                            className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-cyan-500"
+                                            value={filterStrategy}
+                                            onChange={(e) => setFilterStrategy(e.target.value)}
+                                        >
+                                            {strategies.map(s => <option key={s} value={s}>{s}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] uppercase text-slate-500 font-bold">Side</label>
+                                        <select
+                                            className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-cyan-500"
+                                            value={filterDirection}
+                                            onChange={(e) => setFilterDirection(e.target.value)}
+                                        >
+                                            <option value="All">All</option>
+                                            <option value="Long">Long</option>
+                                            <option value="Short">Short</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] uppercase text-slate-500 font-bold">Outcome</label>
+                                        <select
+                                            className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-cyan-500"
+                                            value={filterOutcome}
+                                            onChange={(e) => setFilterOutcome(e.target.value)}
+                                        >
+                                            <option value="All">All</option>
+                                            <option value="Win">Win</option>
+                                            <option value="Loss">Loss</option>
+                                            <option value="BE">Break Even</option>
+                                            <option value="Open">Open</option>
+                                        </select>
+                                    </div>
+                                    <div className="flex items-end">
+                                        <Button variant="ghost" size="sm" onClick={resetFilters} className="w-full text-xs text-red-400 hover:bg-red-950/20">
+                                            Reset All
+                                        </Button>
+                                    </div>
                                 </div>
-                                <div className="space-y-1">
-                                    <label className="text-[10px] uppercase text-slate-500 font-bold">Strategy</label>
-                                    <select
-                                        className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-cyan-500"
-                                        value={filterStrategy}
-                                        onChange={(e) => setFilterStrategy(e.target.value)}
-                                    >
-                                        {strategies.map(s => <option key={s} value={s}>{s}</option>)}
-                                    </select>
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-[10px] uppercase text-slate-500 font-bold">Side</label>
-                                    <select
-                                        className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-cyan-500"
-                                        value={filterDirection}
-                                        onChange={(e) => setFilterDirection(e.target.value)}
-                                    >
-                                        <option value="All">All</option>
-                                        <option value="Long">Long</option>
-                                        <option value="Short">Short</option>
-                                    </select>
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-[10px] uppercase text-slate-500 font-bold">Outcome</label>
-                                    <select
-                                        className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-cyan-500"
-                                        value={filterOutcome}
-                                        onChange={(e) => setFilterOutcome(e.target.value)}
-                                    >
-                                        <option value="All">All</option>
-                                        <option value="Win">Win</option>
-                                        <option value="Loss">Loss</option>
-                                        <option value="BE">Break Even</option>
-                                        <option value="Open">Open</option>
-                                    </select>
-                                </div>
-                                <div className="flex items-end">
-                                    <Button variant="ghost" size="sm" onClick={resetFilters} className="w-full text-xs text-red-400 hover:bg-red-950/20">
-                                        Reset All
-                                    </Button>
+
+                                {/* Date & Time Row */}
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2 border-t border-slate-800">
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] uppercase text-slate-500 font-bold">Start Date</label>
+                                        <input
+                                            type="date"
+                                            className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-cyan-500"
+                                            value={filterStartDate}
+                                            onChange={(e) => setFilterStartDate(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] uppercase text-slate-500 font-bold">End Date</label>
+                                        <input
+                                            type="date"
+                                            className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-cyan-500"
+                                            value={filterEndDate}
+                                            onChange={(e) => setFilterEndDate(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] uppercase text-slate-500 font-bold">Start Time</label>
+                                        <input
+                                            type="time"
+                                            className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-cyan-500"
+                                            value={filterStartTime}
+                                            onChange={(e) => setFilterStartTime(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] uppercase text-slate-500 font-bold">End Time</label>
+                                        <input
+                                            type="time"
+                                            className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-cyan-500"
+                                            value={filterEndTime}
+                                            onChange={(e) => setFilterEndTime(e.target.value)}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         )}
