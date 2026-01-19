@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { JournalEntryForm } from "@/components/features/JournalEntryForm"
 import { AnalyticsChart } from "@/components/features/AnalyticsChart"
 import { TradeHistory } from "@/components/features/TradeHistory"
@@ -13,7 +13,7 @@ import { LandingPage } from "@/components/features/LandingPage"
 
 import { useSearchParams } from "next/navigation"
 
-export default function Home() {
+function HomeContent() {
   const { user } = useAuth()
   const [activeTab, setActiveTab] = useState("Daily")
   const [trades, setTrades] = useState<any[]>([])
@@ -121,5 +121,13 @@ export default function Home() {
         )}
       </div>
     </main>
+  )
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-950 text-white p-8">Loading dashboard...</div>}>
+      <HomeContent />
+    </Suspense>
   )
 }

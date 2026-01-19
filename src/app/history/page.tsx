@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useAuth } from "@/context/AuthContext"
 import { getTrades } from "@/lib/services/tradeService"
 import { Trade } from "@/types"
@@ -10,7 +10,7 @@ import { ArrowLeft, ArrowUpRight, Search, Filter } from "lucide-react"
 import { Input } from "@/components/ui/Input"
 import { Button } from "@/components/ui/Button"
 
-export default function HistoryPage() {
+function HistoryContent() {
     const { user } = useAuth()
     const router = useRouter()
     const [trades, setTrades] = useState<Trade[]>([])
@@ -140,5 +140,13 @@ export default function HistoryPage() {
                 </Card>
             </div>
         </div>
+    )
+}
+
+export default function HistoryPage() {
+    return (
+        <Suspense fallback={<div className="p-8 text-white">Loading trade history...</div>}>
+            <HistoryContent />
+        </Suspense>
     )
 }

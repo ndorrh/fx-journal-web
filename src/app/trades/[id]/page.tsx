@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
 import { getTrade, updateTrade } from "@/lib/services/tradeService"
@@ -12,7 +12,7 @@ import { Select } from "@/components/ui/Select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
 import { ArrowLeft } from "lucide-react"
 
-export default function TradeDetailsPage() {
+function TradeDetailsContent() {
     const { id } = useParams()
     const { user } = useAuth()
     const router = useRouter()
@@ -55,7 +55,6 @@ export default function TradeDetailsPage() {
                         setLessonsLearned(t.lessonsLearned || "")
                         setAfterImageUrl(t.afterImageUrl || "")
 
-                        // Initialize Edit Form
                         // Initialize Edit Form
                         setEditPlan({
                             instrument: t.instrument,
@@ -434,5 +433,13 @@ export default function TradeDetailsPage() {
                 </div>
             </div>
         </div >
+    )
+}
+
+export default function TradeDetailsPage() {
+    return (
+        <Suspense fallback={<div className="p-8 text-white">Loading...</div>}>
+            <TradeDetailsContent />
+        </Suspense>
     )
 }
