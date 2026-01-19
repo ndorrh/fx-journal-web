@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useAuth } from "@/context/AuthContext"
 import { Button } from "@/components/ui/Button"
-import { Menu, X, PlusCircle, LayoutDashboard, LineChart } from "lucide-react"
+import { Menu, X, PlusCircle, LayoutDashboard, LineChart, Shield } from "lucide-react"
 import Link from "next/link"
 
 interface NavbarProps {
@@ -11,7 +11,7 @@ interface NavbarProps {
 }
 
 export function Navbar({ onNewTradeClick }: NavbarProps) {
-    const { user, signInWithGoogle, logout } = useAuth()
+    const { user, role, signInWithGoogle, logout } = useAuth()
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
     return (
@@ -41,6 +41,14 @@ export function Navbar({ onNewTradeClick }: NavbarProps) {
                                     <LineChart size={18} />
                                     Analytics
                                 </Link>
+
+                                {role === 'admin' && (
+                                    <Link href="/admin" className="text-red-400 hover:text-red-300 transition-colors flex items-center gap-2 text-sm font-medium mr-2">
+                                        <Shield size={18} />
+                                        Admin
+                                    </Link>
+                                )}
+
                                 <Button
                                     onClick={onNewTradeClick}
                                     className="gap-2 bg-cyan-600 hover:bg-cyan-500 text-white border-0 shadow-lg shadow-cyan-900/20"
@@ -53,7 +61,7 @@ export function Navbar({ onNewTradeClick }: NavbarProps) {
                                 <div className="flex items-center gap-3">
                                     <div className="text-right hidden lg:block">
                                         <div className="text-sm font-medium text-white">{user.displayName}</div>
-                                        <div className="text-xs text-slate-400">Pro Trader</div>
+                                        <div className="text-xs text-slate-400">{role === 'admin' ? 'Administrator' : 'Pro Trader'}</div>
                                     </div>
                                     <div className="h-10 w-10 rounded-full bg-slate-800 border-2 border-slate-700/50 flex items-center justify-center overflow-hidden shadow-inner hidden lg:flex">
                                         {user.photoURL ? (
@@ -106,7 +114,7 @@ export function Navbar({ onNewTradeClick }: NavbarProps) {
                                     </div>
                                     <div>
                                         <div className="text-sm font-medium text-white">{user.displayName}</div>
-                                        <div className="text-xs text-slate-500">Pro Trader</div>
+                                        <div className="text-xs text-slate-500">{role === 'admin' ? 'Administrator' : 'Pro Trader'}</div>
                                     </div>
                                 </div>
 
@@ -123,6 +131,15 @@ export function Navbar({ onNewTradeClick }: NavbarProps) {
                                         Analytics
                                     </div>
                                 </Link>
+
+                                {role === 'admin' && (
+                                    <Link href="/admin" className="block w-full mb-2" onClick={() => setIsMobileMenuOpen(false)}>
+                                        <div className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-400 hover:text-red-200 hover:bg-red-950/20 rounded-md transition-colors">
+                                            <Shield size={18} />
+                                            Admin Dashboard
+                                        </div>
+                                    </Link>
+                                )}
 
                                 <Button
                                     onClick={() => { onNewTradeClick(); setIsMobileMenuOpen(false) }}

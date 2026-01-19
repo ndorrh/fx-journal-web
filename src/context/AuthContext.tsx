@@ -3,9 +3,11 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { User, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { UserRole } from "@/types";
 
 interface AuthContextType {
     user: User | null;
+    role: UserRole | null; // Add role
     loading: boolean;
     signInWithGoogle: () => Promise<void>;
     logout: () => Promise<void>;
@@ -13,6 +15,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({
     user: null,
+    role: null,
     loading: true,
     signInWithGoogle: async () => { },
     logout: async () => { },
@@ -20,15 +23,15 @@ const AuthContext = createContext<AuthContextType>({
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
+    const [role, setRole] = useState<UserRole | null>(null); // State for role
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             setUser(user);
-            setLoading(false);
 
             if (user) {
-                // Persist user data to Firestore
+                // Persist & Fetch Role
                 try {
                     const { doc, setDoc, getDoc, serverTimestamp } = await import("firebase/firestore");
                     const { db } = await import("@/lib/firebase");
@@ -46,19 +49,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                             createdAt: serverTimestamp(),
                             lastLogin: serverTimestamp()
                         });
+                        setRole("user");
                     } else {
                         // Update last login
                         await setDoc(userRef, {
                             lastLogin: serverTimestamp(),
-                            email: user.email, // Sync these in case they changed
+                            email: user.email,
                             displayName: user.displayName,
                             photoURL: user.photoURL
                         }, { merge: true });
+
+                        // Set Role from DB
+                        setRole(userSnap.data().role as UserRole || "user");
                     }
                 } catch (error) {
-                    console.error("Error persisting user data:", error);
+                    console.error("Error persisting/fetching user data:", error);
+                    setRole("user"); // Fallback
                 }
+            } else {
+                setRole(null);
             }
+            setLoading(false);
         });
         return () => unsubscribe();
     }, []);
@@ -81,7 +92,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, signInWithGoogle, logout }}>
+        <AuthContext.Provider value={{ user, role, loading, signInWithGoogle, logout }}>
             {children}
         </AuthContext.Provider>
     );

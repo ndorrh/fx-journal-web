@@ -19,19 +19,25 @@ interface UserProfile {
 }
 
 export default function AdminPage() {
-    const { user } = useAuth()
+    const { user, role } = useAuth()
     const router = useRouter()
     const [users, setUsers] = useState<UserProfile[]>([])
     const [loading, setLoading] = useState(true)
 
     // Verify Admin Role (Client-side check, security rules should backup)
+    // Verify Admin Role (Client-side check, security rules should backup)
     useEffect(() => {
         if (user) {
-            // For now, we will allow anyone to view this page if they know the URL, BUT we should implement role checks
-            // In a production app, you'd check `user.role === 'admin'` here.
-            // Since we just added persistence, we might not have the role in the Auth object yet without a token refresh or additional fetch.
-            // For MVP, we'll fetch all users.
+            // 1. Wait for role to load
+            if (role === null) return;
 
+            // 2. Check if user is admin, if not redirect
+            if (role !== 'admin') {
+                router.push("/")
+                return
+            }
+
+            // 3. Only fetch if admin
             const fetchUsers = async () => {
                 try {
                     const usersRef = collection(db, "users")
@@ -47,7 +53,7 @@ export default function AdminPage() {
 
             fetchUsers()
         }
-    }, [user])
+    }, [user, role, router])
 
     const handleViewAs = (targetUserId: string) => {
         // Redirect to dashboard with userId param

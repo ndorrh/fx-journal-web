@@ -310,7 +310,11 @@ function TradeDetailsContent() {
                                         <label className="text-xs text-slate-500 uppercase">Chart URL</label>
                                         <Input
                                             value={editPlan.beforeImageUrl || ""}
-                                            onChange={e => setEditPlan({ ...editPlan, beforeImageUrl: e.target.value })}
+                                            onChange={e => {
+                                                const val = e.target.value;
+                                                const converted = convertGoogleDriveLink(val);
+                                                setEditPlan({ ...editPlan, beforeImageUrl: converted });
+                                            }}
                                             className="bg-slate-950"
                                             placeholder="https://..."
                                         />
@@ -405,12 +409,16 @@ function TradeDetailsContent() {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-300">Result Image URL (TradingView)</label>
+                                <label className="text-sm font-medium text-slate-300">Result Image URL (TradingView or Google Drive)</label>
                                 <Input
                                     className="bg-slate-950/50 border-slate-800 focus:border-purple-500"
                                     placeholder="https://..."
                                     value={afterImageUrl}
-                                    onChange={(e) => setAfterImageUrl(e.target.value)}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        const converted = convertGoogleDriveLink(val);
+                                        setAfterImageUrl(converted);
+                                    }}
                                 />
                                 {afterImageUrl && (
                                     <div className="relative w-full h-32 rounded-lg overflow-hidden border border-slate-700 mt-2">

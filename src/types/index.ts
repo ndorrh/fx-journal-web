@@ -1,4 +1,15 @@
 export type StrategyType = "SupplyDemand" | "ICT" | "Other";
+export type UserRole = "admin" | "user";
+
+export interface UserProfile {
+    uid: string;
+    email: string;
+    displayName: string;
+    photoURL: string;
+    role: UserRole;
+    createdAt: any;
+    lastLogin: any;
+}
 
 export interface Trade {
     id?: string;

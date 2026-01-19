@@ -64,10 +64,12 @@ function HomeContent() {
           onClose={() => setIsModalOpen(false)}
           title="Log New Trade Plan"
         >
-          <JournalEntryForm onSuccess={() => {
-            setIsModalOpen(false) // Auto close
-            loadTrades() // Refresh data
-          }} />
+          <JournalEntryForm
+            targetUserId={effectiveUserId || undefined}
+            onSuccess={() => {
+              setIsModalOpen(false) // Auto close
+              loadTrades() // Refresh data
+            }} />
         </Modal>
 
         {/* Dashboard Content */}

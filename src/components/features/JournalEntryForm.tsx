@@ -12,9 +12,10 @@ import { convertGoogleDriveLink } from "@/lib/utils"
 
 interface JournalEntryFormProps {
     onSuccess?: () => void
+    targetUserId?: string
 }
 
-export function JournalEntryForm({ onSuccess }: JournalEntryFormProps) {
+export function JournalEntryForm({ onSuccess, targetUserId }: JournalEntryFormProps) {
     const { user } = useAuth()
     const [loading, setLoading] = useState(false)
     const [successMsg, setSuccessMsg] = useState("")
@@ -75,8 +76,11 @@ export function JournalEntryForm({ onSuccess }: JournalEntryFormProps) {
             const plannedRR = calculateRR()
             const finalBeforeImageUrl = convertGoogleDriveLink(beforeImageUrl);
 
+            // Use target user ID if provided (Admin "Act As"), otherwise use logged-in user
+            const finalUserId = targetUserId || user.uid
+
             const tradeData: Omit<Trade, "id" | "createdAt"> = {
-                userId: user.uid,
+                userId: finalUserId,
                 status: "Planned",
                 date: date ? new Date(date).getTime() : Date.now(),
                 instrument: pair,
@@ -387,7 +391,16 @@ export function JournalEntryForm({ onSuccess }: JournalEntryFormProps) {
 
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium text-slate-300">Chart URL (Optional)</label>
-                                        <Input placeholder="TradingView Link..." value={beforeImageUrl} onChange={(e) => setBeforeImageUrl(e.target.value)} className="h-10 bg-slate-900/50" />
+                                        <Input
+                                            placeholder="TradingView or Google Drive Link..."
+                                            value={beforeImageUrl}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                const converted = convertGoogleDriveLink(val);
+                                                setBeforeImageUrl(converted);
+                                            }}
+                                            className="h-10 bg-slate-900/50"
+                                        />
                                     </div>
 
                                     {beforeImageUrl ? (
