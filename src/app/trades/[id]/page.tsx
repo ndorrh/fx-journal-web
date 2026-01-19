@@ -697,6 +697,25 @@ function TradeDetailsContent() {
                             </div>
 
                             <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-300">Post-Trade Emotion</label>
+                                <Select
+                                    className="bg-slate-950/50 border-slate-800 focus:border-purple-500"
+                                    value={postTradeEmotion}
+                                    onChange={(e) => setPostTradeEmotion(e.target.value)}
+                                >
+                                    <option value="">Select Emotion...</option>
+                                    <option value="Neutral">Neutral</option>
+                                    <option value="Happy">Happy</option>
+                                    <option value="Frustrated">Frustrated</option>
+                                    <option value="Anxious">Anxious</option>
+                                    <option value="Revenge">Revenge</option>
+                                    <option value="Confident">Confident</option>
+                                    <option value="Greedy">Greedy</option>
+                                    <option value="Fearful">Fearful</option>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
                                 <label className="text-sm font-medium text-slate-300">Why did you exit?</label>
                                 <Input
                                     className="bg-slate-950/50 border-slate-800 focus:border-purple-500"

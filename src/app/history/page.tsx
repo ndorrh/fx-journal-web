@@ -82,7 +82,18 @@ function HistoryContent() {
         if (!effectiveUserId) return;
         try {
             // EXPORT ONLY FILTERED TRADES
-            const dataToExport = filteredTrades;
+            // Ensure new fields are included even if undefined in DB
+            const dataToExport = filteredTrades.map(t => ({
+                ...t,
+                sleepScore: t.sleepScore ?? null,
+                zoneCreationTime: t.zoneCreationTime ?? null,
+                entryTime: t.entryTime ?? null,
+                timeToEntry: t.timeToEntry ?? null,
+                maxAdverseExcursion: t.maxAdverseExcursion ?? null,
+                maxFavorableExcursion: t.maxFavorableExcursion ?? null,
+                closedReason: t.closedReason ?? null,
+                postTradeEmotion: t.postTradeEmotion ?? null
+            }));
 
             const jsonString = JSON.stringify(dataToExport, null, 2);
             const blob = new Blob([jsonString], { type: "application/json" });
