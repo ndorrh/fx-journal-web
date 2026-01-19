@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext"
 import { Button } from "@/components/ui/Button"
 import { Menu, X, PlusCircle, LayoutDashboard, LineChart, Shield } from "lucide-react"
 import Link from "next/link"
+import { AdminUserSwitcher } from "@/components/admin/AdminUserSwitcher"
 
 interface NavbarProps {
     onNewTradeClick: () => void
@@ -43,10 +44,15 @@ export function Navbar({ onNewTradeClick }: NavbarProps) {
                                 </Link>
 
                                 {role === 'admin' && (
-                                    <Link href="/admin" className="text-red-400 hover:text-red-300 transition-colors flex items-center gap-2 text-sm font-medium mr-2">
-                                        <Shield size={18} />
-                                        Admin
-                                    </Link>
+                                    <>
+                                        <Link href="/admin" className="text-red-400 hover:text-red-300 transition-colors flex items-center gap-2 text-sm font-medium mr-2">
+                                            <Shield size={18} />
+                                            Admin
+                                        </Link>
+                                        <div className="mr-4">
+                                            <AdminUserSwitcher />
+                                        </div>
+                                    </>
                                 )}
 
                                 <Button
