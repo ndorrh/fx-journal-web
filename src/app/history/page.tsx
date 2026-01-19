@@ -15,7 +15,15 @@ function HistoryContent() {
     const router = useRouter()
     const [trades, setTrades] = useState<Trade[]>([])
     const [loading, setLoading] = useState(true)
+
+    // Filters
     const [searchTerm, setSearchTerm] = useState("")
+    const [filterInstrument, setFilterInstrument] = useState("All")
+    const [filterStrategy, setFilterStrategy] = useState("All")
+    const [filterDirection, setFilterDirection] = useState("All")
+    const [filterStatus, setFilterStatus] = useState("All")
+    const [filterOutcome, setFilterOutcome] = useState("All")
+    const [showFilters, setShowFilters] = useState(false)
 
     const searchParams = useSearchParams()
     const viewAsUserId = searchParams?.get('userId')
@@ -30,22 +38,37 @@ function HistoryContent() {
         }
     }, [effectiveUserId])
 
-    const filteredTrades = trades.filter(t =>
-        t.instrument.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        t.strategy.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        t.status.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    // Compute unique options for dropdowns
+    const instruments = ["All", ...Array.from(new Set(trades.map(t => t.instrument).filter(Boolean))).sort()]
+    const strategies = ["All", ...Array.from(new Set(trades.map(t => t.strategy).filter(Boolean))).sort()]
+
+    const filteredTrades = trades.filter(t => {
+        const matchesSearch =
+            t.instrument.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            t.strategy.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            t.status.toLowerCase().includes(searchTerm.toLowerCase())
+
+        const matchesInstrument = filterInstrument === "All" || t.instrument === filterInstrument
+        const matchesStrategy = filterStrategy === "All" || t.strategy === filterStrategy
+        const matchesDirection = filterDirection === "All" || t.direction === filterDirection
+        const matchesStatus = filterStatus === "All" || t.status === filterStatus
+        const matchesOutcome = filterOutcome === "All" || (t.outcome || "Open") === filterOutcome
+
+        return matchesSearch && matchesInstrument && matchesStrategy && matchesDirection && matchesStatus && matchesOutcome
+    })
 
     const handleExport = async () => {
         if (!effectiveUserId) return;
         try {
-            const data = await getTrades(effectiveUserId);
-            const jsonString = JSON.stringify(data, null, 2);
+            // EXPORT ONLY FILTERED TRADES
+            const dataToExport = filteredTrades;
+
+            const jsonString = JSON.stringify(dataToExport, null, 2);
             const blob = new Blob([jsonString], { type: "application/json" });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
-            link.download = `fx_journal_backup_${new Date().toISOString().slice(0, 10)}.json`;
+            link.download = `fx_journal_export_${new Date().toISOString().slice(0, 10)}.json`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -80,20 +103,29 @@ function HistoryContent() {
         reader.readAsText(file);
     };
 
+    const resetFilters = () => {
+        setSearchTerm("")
+        setFilterInstrument("All")
+        setFilterStrategy("All")
+        setFilterDirection("All")
+        setFilterStatus("All")
+        setFilterOutcome("All")
+    }
+
     if (loading) return <div className="p-8 text-white">Loading history...</div>
 
     return (
         <div className="">
             <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in">
 
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-500">
                             Trade Journal
                         </h1>
                         <p className="text-slate-400 mt-1">Full history of all executions and plans.</p>
                     </div>
-                    <div className="flex gap-3">
+                    <div className="flex flex-wrap gap-3">
                         <div className="relative">
                             <input
                                 type="file"
@@ -107,27 +139,103 @@ function HistoryContent() {
                             </Button>
                         </div>
                         <Button variant="outline" onClick={handleExport} className="border-slate-700 hover:bg-slate-800 text-slate-300">
-                            <span className="mr-2">📤</span> Export Data
+                            <span className="mr-2">📤</span> Export ({filteredTrades.length})
                         </Button>
                         <Button variant="ghost" onClick={() => router.push('/')} className="text-slate-400 hover:text-white border border-transparent hover:border-slate-800">
                             <ArrowLeft className="w-4 h-4 mr-2" />
-                            Back to Dashboard
+                            To Dashboard
                         </Button>
                     </div>
                 </div>
 
                 <Card className="glass-card bg-slate-950/50 border-slate-800">
-                    <CardHeader className="flex flex-row items-center justify-between pb-4">
-                        <CardTitle className="text-slate-200">All Entries</CardTitle>
-                        <div className="relative w-64">
-                            <Search className="absolute left-2 top-2.5 h-4 w-4 text-slate-500" />
-                            <Input
-                                placeholder="Search pair, strategy..."
-                                className="pl-8 bg-slate-900/50 border-slate-800 focus:border-cyan-500/50 text-sm"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
+                    <CardHeader className="flex flex-col gap-4 pb-4">
+                        <div className="flex flex-row items-center justify-between">
+                            <CardTitle className="text-slate-200 flex items-center gap-2">
+                                All Entries
+                                <span className="text-sm font-normal text-slate-500 bg-slate-900 px-2 py-0.5 rounded-full">
+                                    {filteredTrades.length} / {trades.length}
+                                </span>
+                            </CardTitle>
+
+                            <div className="flex gap-2">
+                                <Button
+                                    variant={showFilters ? "secondary" : "ghost"}
+                                    size="sm"
+                                    onClick={() => setShowFilters(!showFilters)}
+                                    className={showFilters ? "bg-cyan-900/20 text-cyan-400" : "text-slate-400"}
+                                >
+                                    <Filter className="w-4 h-4 mr-2" />
+                                    Filters
+                                </Button>
+                                <div className="relative w-64 hidden md:block">
+                                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-slate-500" />
+                                    <Input
+                                        placeholder="Search anything..."
+                                        className="pl-8 bg-slate-900/50 border-slate-800 focus:border-cyan-500/50 text-sm h-9"
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                </div>
+                            </div>
                         </div>
+
+                        {/* ADVANCED FILTER BAR */}
+                        {showFilters && (
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 p-4 bg-slate-900/40 rounded-lg border border-slate-800 animate-in slide-in-from-top-2">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] uppercase text-slate-500 font-bold">Instrument</label>
+                                    <select
+                                        className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-cyan-500"
+                                        value={filterInstrument}
+                                        onChange={(e) => setFilterInstrument(e.target.value)}
+                                    >
+                                        {instruments.map(inst => <option key={inst} value={inst}>{inst}</option>)}
+                                    </select>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] uppercase text-slate-500 font-bold">Strategy</label>
+                                    <select
+                                        className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-cyan-500"
+                                        value={filterStrategy}
+                                        onChange={(e) => setFilterStrategy(e.target.value)}
+                                    >
+                                        {strategies.map(s => <option key={s} value={s}>{s}</option>)}
+                                    </select>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] uppercase text-slate-500 font-bold">Side</label>
+                                    <select
+                                        className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-cyan-500"
+                                        value={filterDirection}
+                                        onChange={(e) => setFilterDirection(e.target.value)}
+                                    >
+                                        <option value="All">All</option>
+                                        <option value="Long">Long</option>
+                                        <option value="Short">Short</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] uppercase text-slate-500 font-bold">Outcome</label>
+                                    <select
+                                        className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-cyan-500"
+                                        value={filterOutcome}
+                                        onChange={(e) => setFilterOutcome(e.target.value)}
+                                    >
+                                        <option value="All">All</option>
+                                        <option value="Win">Win</option>
+                                        <option value="Loss">Loss</option>
+                                        <option value="BE">Break Even</option>
+                                        <option value="Open">Open</option>
+                                    </select>
+                                </div>
+                                <div className="flex items-end">
+                                    <Button variant="ghost" size="sm" onClick={resetFilters} className="w-full text-xs text-red-400 hover:bg-red-950/20">
+                                        Reset All
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
                     </CardHeader>
                     <CardContent>
                         <div className="overflow-x-auto rounded-lg border border-slate-800">
