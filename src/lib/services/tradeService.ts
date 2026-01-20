@@ -63,6 +63,81 @@ export const updateTrade = async (userId: string, tradeId: string, updates: Part
     }
 };
 
+import { collectionGroup, limit } from "firebase/firestore";
+
+export interface LeaderboardEntry {
+    userId: string;
+    displayName: string;
+    photoURL?: string;
+    totalTrades: number;
+    winRate: number;
+    totalPnL: number;
+    totalR: number;
+}
+
+export const getLeaderboardData = async (): Promise<LeaderboardEntry[]> => {
+    try {
+        // Fetch last 500 closed trades globally
+        const tradesQuery = query(
+            collectionGroup(db, 'trades'),
+            where("status", "==", "Closed"),
+            orderBy("date", "desc"),
+            limit(500)
+        );
+
+        const snapshot = await getDocs(tradesQuery);
+        const trades = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Trade));
+
+        // Group by User
+        const userStats: Record<string, {
+            trades: number,
+            wins: number,
+            pnl: number,
+            r: number,
+            userId: string
+        }> = {};
+
+        trades.forEach(trade => {
+            if (!userStats[trade.userId]) {
+                userStats[trade.userId] = { trades: 0, wins: 0, pnl: 0, r: 0, userId: trade.userId };
+            }
+            const stats = userStats[trade.userId];
+            stats.trades += 1;
+            stats.pnl += trade.pnl || 0;
+            stats.r += trade.actualRR || 0;
+            if (trade.outcome === "Win") stats.wins += 1;
+        });
+
+        // Fetch User Profiles for Display Names
+        const leaderboard: LeaderboardEntry[] = [];
+        for (const userId of Object.keys(userStats)) {
+            const stats = userStats[userId];
+            // Minimum trades to appear on leaderboard
+            if (stats.trades < 3) continue;
+
+            const userDoc = await getDoc(doc(db, "users", userId));
+            const userData = userDoc.exists() ? userDoc.data() : { displayName: "Unknown Trader" };
+
+            leaderboard.push({
+                userId,
+                displayName: userData.displayName || "Unknown Trader",
+                photoURL: userData.photoURL,
+                totalTrades: stats.trades,
+                winRate: parseFloat(((stats.wins / stats.trades) * 100).toFixed(1)),
+                totalPnL: stats.pnl,
+                totalR: parseFloat(stats.r.toFixed(2))
+            });
+        }
+
+        // Sort by Total R (Fairer than PnL)
+        return leaderboard.sort((a, b) => b.totalR - a.totalR);
+
+    } catch (e) {
+        console.error("Error fetching leaderboard:", e);
+        return [];
+    }
+};
+
 /*
 export const uploadTradeImage = async (file: File, userId: string): Promise<string> => {
     const storageRef = ref(storage, `users/${userId}/trades/${Date.now()}_${file.name}`);

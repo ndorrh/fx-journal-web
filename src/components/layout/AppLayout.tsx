@@ -6,6 +6,7 @@ import { Navbar } from "@/components/features/Navbar"
 import { Modal } from "@/components/ui/Modal"
 import { JournalEntryForm } from "@/components/features/JournalEntryForm"
 import { useAuth } from "@/context/AuthContext"
+import { Footer } from "@/components/features/Footer"
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
     const { user } = useAuth()
@@ -44,9 +45,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 </div>
             </Modal>
 
-            <main>
+            <main className="flex-1">
                 {children}
             </main>
+            <Footer />
         </div>
     )
 }

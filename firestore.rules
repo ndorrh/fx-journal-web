@@ -1,9 +1,37 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow users to read and write only their own data
-    match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+    // Helper: Check if user is admin by looking up their profile
+    // Note: This costs 1 read operation per request, but is secure without custom claims.
+    function isAdmin() {
+      return request.auth != null && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Helper: Check if user owns the document or is admin
+    function isOwnerOrAdmin(userId) {
+      return (request.auth != null && request.auth.uid == userId) || isAdmin();
+    }
+
+    // USERS COLLECTION & SUBCOLLECTIONS (Trades, Journal, etc.)
+    match /users/{userId} {
+       // Allow PUBLIC read (get) of user profile doc to display name/photo on leaderboard
+       // We still restrict 'list' to avoid dumping all users
+       allow get: if true;
+       allow list, write: if isOwnerOrAdmin(userId);
+       
+       match /{document=**} {
+         allow read, write: if isOwnerOrAdmin(userId);
+       }
+    }
+
+    // GLOBAL TRADES QUERY (For Leaderboard)
+    // Applies to Collection Group Queries specifically
+    match /{path=**}/trades/{tradeId} {
+      // Allow PUBLIC listing/reading of CLOSED trades for the leaderboard
+      // "resource.data" refers to the document being read
+      allow read, list: if resource.data.status == 'Closed';
     }
   }
 }

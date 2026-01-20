@@ -10,6 +10,7 @@ import { getTrades } from "@/lib/services/tradeService"
 import { cn } from "@/lib/utils"
 
 import { LandingPage } from "@/components/features/LandingPage"
+import { Leaderboard } from "@/components/features/Leaderboard"
 
 import { useSearchParams } from "next/navigation"
 
@@ -104,6 +105,13 @@ function HomeContent() {
                 <TradeHistory trades={trades} />
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Public Leaderboard Section */}
+        {user && (
+          <div className="mt-12 mb-20 animate-in fade-in slide-in-from-bottom-5">
+            <Leaderboard />
           </div>
         )}
       </div>

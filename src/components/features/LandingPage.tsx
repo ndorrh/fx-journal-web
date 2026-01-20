@@ -3,6 +3,7 @@
 import { useAuth } from "@/context/AuthContext"
 import { Button } from "@/components/ui/Button"
 import { ArrowRight, BarChart2, Brain, Target, Zap } from "lucide-react"
+import { Leaderboard } from "@/components/features/Leaderboard"
 
 export function LandingPage() {
     const { signInWithGoogle } = useAuth()
@@ -75,6 +76,15 @@ export function LandingPage() {
                     title="Deep Analytics"
                     description="Visualize your win rate, drawdown, and equity curve in real-time."
                 />
+            </div>
+
+            {/* Public Leaderboard Section */}
+            <div className="relative z-10 w-full max-w-4xl mx-auto mt-24 mb-24 px-4 animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-700">
+                <div className="text-center mb-8">
+                    <h2 className="text-3xl font-bold text-white mb-2">Hall of Fame</h2>
+                    <p className="text-slate-400">Top performing traders in our community</p>
+                </div>
+                <Leaderboard />
             </div>
 
             {/* Floating Elements (Decorations) */}
