@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext"
 import { Button } from "@/components/ui/Button"
 import { Menu, X, PlusCircle, LayoutDashboard, LineChart, Shield } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { AdminUserSwitcher } from "@/components/admin/AdminUserSwitcher"
 
 interface NavbarProps {
@@ -14,6 +15,13 @@ interface NavbarProps {
 export function Navbar({ onNewTradeClick }: NavbarProps) {
     const { user, role, signInWithGoogle, logout } = useAuth()
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+    const router = useRouter()
+
+    const handleLogout = async () => {
+        await logout()
+        router.push('/')
+        setIsMobileMenuOpen(false)
+    }
 
     return (
         <nav className="sticky top-0 z-40 w-full border-b border-slate-800 bg-slate-950/80 backdrop-blur supports-[backdrop-filter]:bg-slate-950/60">
@@ -79,7 +87,7 @@ export function Navbar({ onNewTradeClick }: NavbarProps) {
                                         )}
                                     </div>
                                 </div>
-                                <Button variant="ghost" onClick={logout} className="text-red-400 hover:text-red-300 hover:bg-red-950/30">
+                                <Button variant="ghost" onClick={handleLogout} className="text-red-400 hover:text-red-300 hover:bg-red-950/30">
                                     Sign Out
                                 </Button>
                             </div>
@@ -157,7 +165,7 @@ export function Navbar({ onNewTradeClick }: NavbarProps) {
                                 </Button>
                                 <Button
                                     variant="ghost"
-                                    onClick={logout}
+                                    onClick={handleLogout}
                                     className="w-full justify-start text-red-400 hover:bg-red-950/30"
                                 >
                                     Sign Out
